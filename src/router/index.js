@@ -23,9 +23,14 @@ const routes = [
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-// Verrouillage des pages selon la progression (lu depuis le store)
-router.beforeEach((to) => {
+// Page locking driven by progress (read from the store)
+router.beforeEach(async (to) => {
   const p = useProgression()
+
+  // The first navigation starts at `app.use(router)`, before IndexedDB has
+  // been read: without this wait a locked page bounces back to the trail.
+  await p.pret()
+
   if (to.meta.verrou === 'familier' && !p.pageFamilierDisponible) return '/parcours'
   if (to.meta.verrou === 'microscopique' && !p.microscopiqueDebloquee(to.params.id))
     return `/fresque/${to.params.id}`

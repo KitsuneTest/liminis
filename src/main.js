@@ -9,7 +9,9 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
-// On charge la progression sauvegardée AVANT d'afficher l'app,
-// pour que le rechargement de page ne perde rien.
+// Mount no matter what: a storage failure must not leave a blank screen.
 const progression = useProgression()
-progression.hydrater().then(() => app.mount('#app'))
+progression
+  .pret()
+  .catch((e) => console.error('Hydratation impossible :', e))
+  .finally(() => app.mount('#app'))

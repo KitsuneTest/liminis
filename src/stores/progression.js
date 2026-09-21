@@ -1,27 +1,29 @@
 // stores/progression.js
 // -----------------------------------------------------------------------------
-// COLONNE VERTÉBRALE DU DISPOSITIF
-// Store central qui garde toute la progression du parcours et la synchronise
-// automatiquement dans IndexedDB (via localForage). Aucun compte, aucun serveur :
-// la progression survit au rechargement de la page tant que l'utilisateur reste
-// sur le même navigateur/appareil.
+// BACKBONE OF THE WHOLE EXPERIENCE
+// Central store holding all trail progress, synced automatically to IndexedDB
+// through localForage. No account, no server: progress survives a page reload
+// as long as the visitor stays on the same browser and device.
 //
-// Prérequis :  npm install pinia localforage
+// Requires: npm install pinia localforage
 // -----------------------------------------------------------------------------
 
 import { defineStore } from 'pinia'
 import localforage from 'localforage'
 
-// --- Configuration des fresques ---------------------------------------------
-// La config vit dans src/data/fresques.js (coordonnées, fragments, cibles AR).
+// --- Mural configuration -----------------------------------------------------
+// Lives in src/data/fresques.js (coordinates, fragments, AR targets).
 import { FRESQUES } from '../data/fresques'
 export { FRESQUES }
 
 const CLE_STOCKAGE = 'progression-parcours'
 
-// --- Distance entre deux points GPS en mètres (formule de Haversine) ---------
-// Le cos(latitude) corrige automatiquement la déformation selon la latitude.
-function distanceMetres(a, b) {
+// Kept out of the state: a promise must not be serialised.
+let promesseHydratation = null
+
+// --- Distance between two GPS points, in metres (haversine) ------------------
+// The cos(latitude) term corrects the distortion that grows with latitude.
+export function distanceMetres(a, b) {
   const R = 6371000
   const toRad = (deg) => (deg * Math.PI) / 180
   const dLat = toRad(b.lat - a.lat)
@@ -32,21 +34,21 @@ function distanceMetres(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h))
 }
 
-// --- État initial (aussi utilisé pour la réinitialisation) -------------------
+// --- Initial state (also used when resetting) --------------------------------
 function etatInitial() {
   return {
-    hydrate: false, // passe à true une fois les données chargées depuis IndexedDB
+    hydrate: false, // flips to true once IndexedDB has been read
     fresques: Object.fromEntries(
       FRESQUES.map((f) => [
         f.id,
         {
-          tampon: false,   // présence validée (géoloc ou secours)
-          fragments: [],   // ids des fragments collectés en AR
+          tampon: false,   // presence confirmed (GPS or manual fallback)
+          fragments: [],   // ids of fragments collected in AR
         },
       ])
     ),
-    quiz: { termine: false, reponses: [] }, // quiz de personnalité
-    familier: null,                          // { id, nom } une fois débloqué
+    quiz: { termine: false, reponses: [] }, // personality quiz
+    familier: null,                          // { id, nom } once unlocked
   }
 }
 
@@ -54,38 +56,38 @@ export const useProgression = defineStore('progression', {
   state: () => etatInitial(),
 
   getters: {
-    // Config d'une fresque par son id
+    // A mural config, by id
     fresqueConfig: () => (id) => FRESQUES.find((f) => f.id === id),
 
-    // Tous les fragments d'une fresque sont collectés ?
+    // Have all fragments of a mural been collected?
     fresqueComplete: (state) => (id) => {
       const cfg = FRESQUES.find((f) => f.id === id)
       if (!cfg) return false
       return (state.fresques[id]?.fragments.length ?? 0) >= cfg.nbFragments
     },
 
-    // La page microscopique se débloque quand tous les fragments sont collectés
+    // The microscopic page unlocks once every fragment is collected
     microscopiqueDebloquee() {
       return (id) => this.fresqueComplete(id)
     },
 
-    // Nombre de tampons obtenus
+    // How many stamps have been earned
     nbTampons: (state) =>
       Object.values(state.fresques).filter((f) => f.tampon).length,
 
-    // Les 3 tampons sont collectés ?
+    // Are all 3 stamps collected?
     tousTamponsCollectes() {
       return this.nbTampons >= FRESQUES.length
     },
 
-    // La page familier n'est disponible qu'avec les 3 tampons
+    // The companion page needs all 3 stamps
     pageFamilierDisponible() {
       return this.tousTamponsCollectes
     },
 
     familierDebloque: (state) => state.familier !== null,
 
-    // Petit récapitulatif pratique pour l'affichage du carnet
+    // Handy summary for the notebook view
     resume() {
       return {
         tampons: this.nbTampons,
@@ -96,28 +98,49 @@ export const useProgression = defineStore('progression', {
   },
 
   actions: {
-    // -- À appeler une seule fois au démarrage de l'app -----------------------
+    // Waits for progress to be read. Idempotent: reads only once.
+    pret() {
+      if (!promesseHydratation) promesseHydratation = this.hydrater()
+      return promesseHydratation
+    },
+
+    // The actual read: go through pret() instead.
     async hydrater() {
-      const sauvegarde = await localforage.getItem(CLE_STOCKAGE)
+      let sauvegarde = null
+      try {
+        sauvegarde = await localforage.getItem(CLE_STOCKAGE)
+      } catch {
+        // Storage blocked (private browsing): start from a fresh state.
+        sauvegarde = null
+      }
       if (sauvegarde) this.$patch(sauvegarde)
+
+      // An older save may not know every mural: without this top-up the views
+      // read `undefined.tampon` and the app crashes.
+      for (const f of FRESQUES) {
+        if (!this.fresques[f.id]) this.fresques[f.id] = { tampon: false, fragments: [] }
+        else if (!Array.isArray(this.fresques[f.id].fragments))
+          this.fresques[f.id].fragments = []
+      }
+
       this.hydrate = true
 
-      // Persistance automatique : à chaque changement d'état, on réécrit dans
-      // IndexedDB. JSON.parse(JSON.stringify(...)) sérialise proprement l'état.
+      // Automatic persistence: every state change is written back to IndexedDB.
+      // JSON.parse(JSON.stringify(...)) gives a clean serialisable snapshot.
       this.$subscribe((_mutation, state) => {
         localforage.setItem(CLE_STOCKAGE, JSON.parse(JSON.stringify(state)))
       })
     },
 
-    // -- Détection de zone : à brancher sur watchPosition --------------------
-    // Renvoie l'id de la fresque validée (ou null). On ajoute la marge
-    // d'incertitude (accuracy) au rayon pour ne pas rater une entrée légitime.
+    // -- Zone detection: wire this to watchPosition --------------------------
+    // Returns the id of the validated mural, or null. The accuracy margin is
+    // added to the radius so a legitimate arrival is never missed.
     verifierZone(userPos, accuracy = 0) {
-      // Signal trop imprécis : on n'affirme rien.
+      // Signal too rough to claim anything.
       if (accuracy > 40) return null
 
       for (const f of FRESQUES) {
-        if (this.fresques[f.id].tampon) continue // déjà validée
+        if (this.fresques[f.id].tampon) continue // already validated
         const d = distanceMetres(userPos, { lat: f.lat, lng: f.lng })
         if (d <= f.rayon + accuracy) {
           this.poserTampon(f.id)
@@ -127,14 +150,14 @@ export const useProgression = defineStore('progression', {
       return null
     },
 
-    // Pose un tampon (utilisé par la géoloc, ou par un QR de secours)
+    // Lays down a stamp (used by GPS, or by a fallback QR code)
     poserTampon(id) {
       if (this.fresques[id] && !this.fresques[id].tampon) {
         this.fresques[id].tampon = true
       }
     },
 
-    // Collecte d'un fragment en AR (idempotent : pas de doublon)
+    // Collects an AR fragment (idempotent: no duplicates)
     collecterFragment(fresqueId, fragmentId) {
       const f = this.fresques[fresqueId]
       if (f && !f.fragments.includes(fragmentId)) {
@@ -142,22 +165,22 @@ export const useProgression = defineStore('progression', {
       }
     },
 
-    // Enregistre les réponses du quiz de personnalité
+    // Records the personality quiz answers
     repondreQuiz(reponses) {
       this.quiz.reponses = reponses
       this.quiz.termine = true
     },
 
-    // Débloque le familier (exige les 3 tampons + le quiz terminé)
+    // Unlocks the companion (needs all 3 stamps and a finished quiz)
     debloquerFamilier(familier) {
       if (this.tousTamponsCollectes && this.quiz.termine) {
-        this.familier = familier // ex. { id: 'renard', nom: 'Renard curieux' }
+        this.familier = familier // e.g. { id: 'renard', nom: 'Renard curieux' }
         return true
       }
       return false
     },
 
-    // Export du carnet : télécharge un fichier JSON de toute la progression
+    // Notebook export: downloads the whole progress as a JSON file
     exporterJSON() {
       const donnees = {
         exporteLe: new Date().toISOString(),
@@ -176,7 +199,7 @@ export const useProgression = defineStore('progression', {
       URL.revokeObjectURL(url)
     },
 
-    // Remet tout à zéro (utile pour tester à plusieurs)
+    // Wipes everything (handy when several people test on one device)
     async reinitialiser() {
       await localforage.removeItem(CLE_STOCKAGE)
       this.$patch(etatInitial())
