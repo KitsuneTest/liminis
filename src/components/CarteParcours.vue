@@ -11,6 +11,7 @@ const props = defineProps({
   etats: { type: Object, required: true },
   // User position: { lat, lng, accuracy } or null
   position: { type: Object, default: null },
+  plein: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['choisir'])
@@ -78,7 +79,8 @@ function dessinerFresques() {
     })
       .addTo(coucheMarqueurs)
       .bindPopup(
-        `<strong>${f.nom}</strong><br>` +
+        `<img class="popup-photo" src="${f.photo}" alt="">` +
+          `<strong>${f.nom}</strong><br>` +
           (visitee ? 'Tampon obtenu ✓' : `Approchez-vous à moins de ${f.rayon} m`)
       )
 
@@ -186,7 +188,7 @@ watch(
 </script>
 
 <template>
-  <div class="carte-bloc">
+  <div class="carte-bloc" :class="{ 'carte-bloc--plein': plein }">
     <div ref="conteneur" class="carte" role="application" aria-label="Carte du parcours"></div>
 
     <p v-if="!tuilesOk" class="carte-hors-ligne">
@@ -242,6 +244,16 @@ watch(
   color: var(--encre-douce);
   box-shadow: var(--ombre-1);
 }
+
+.carte-bloc--plein {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  min-height: 0;
+}
+.carte-bloc--plein .carte { height: auto; flex: 1; min-height: 0; }
+.carte-bloc--plein .carte-outils { top: calc(10px + env(safe-area-inset-top, 0px)); }
 
 .carte-outils {
   position: absolute;
@@ -341,6 +353,14 @@ watch(
   box-shadow: var(--ombre-3);
 }
 .leaflet-popup-content { margin: 0.7rem 0.9rem; font-family: var(--sans); font-size: 0.88rem; }
+.leaflet-popup-content .popup-photo {
+  display: block;
+  width: 168px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--rayon-xs);
+  margin-bottom: 0.5rem;
+}
 .leaflet-popup-tip { background: var(--papier-clair); border: 1px solid var(--ligne); }
 .leaflet-container { font-family: var(--sans); background: var(--papier); }
 .leaflet-control-attribution {
