@@ -8,44 +8,36 @@ const commence = computed(() => progression.nbTampons > 0)
 
 <template>
   <section class="couverture">
-    <div class="couverture__carnet">
-      <div class="bandeau-washi"></div>
+    <article class="livre">
+      <div class="livre__tranche" aria-hidden="true"></div>
 
-      <header class="entete">
-        <p class="surtitre">Carnet de terrain</p>
-        <h1 class="titre">Liminis</h1>
-        <p class="sous-titre">Trois fresques, un parcours, un familier à trouver.</p>
-      </header>
+      <div class="livre__plat">
+        <p class="editeur">Université de la Nouvelle-Calédonie</p>
 
-      <div class="vignette" aria-hidden="true">
-        <span class="vignette__astre"></span>
-        <span class="vignette__colline vignette__colline--loin"></span>
-        <span class="vignette__colline vignette__colline--pres"></span>
-        <span v-for="n in 3" :key="n" class="vignette__repere" :style="{ '--i': n }">{{ n }}</span>
-      </div>
-
-      <ol class="etapes">
-        <li><b>Marchez</b> jusqu'à chaque fresque, la carte vous guide.</li>
-        <li><b>Visez-la</b> avec la caméra pour récolter ses fragments.</li>
-        <li><b>Complétez</b> le carnet : les trois tampons réveillent votre familier.</li>
-      </ol>
-
-      <div v-if="commence" class="reprise">
-        <div class="jauge" :aria-label="`${progression.nbTampons} tampons sur ${FRESQUES.length}`">
-          <div
-            class="jauge__valeur"
-            :style="{ width: (progression.nbTampons / FRESQUES.length) * 100 + '%' }"
-          ></div>
+        <div class="titre-bloc">
+          <span class="filet" aria-hidden="true"></span>
+          <h1 class="titre">Liminis</h1>
+          <p class="sous-titre">Carnet de terrain</p>
+          <span class="filet" aria-hidden="true"></span>
         </div>
-        <p class="legende">{{ progression.nbTampons }} tampon(s) sur {{ FRESQUES.length }}</p>
+
+        <p class="accroche">
+          Trois fresques du campus de Nouville,<br />
+          à rejoindre, à regarder de près,<br />
+          et à garder.
+        </p>
+
+        <div class="livre__bas">
+          <RouterLink class="bouton bouton--bloc" to="/parcours">
+            {{ commence ? 'Reprendre' : 'Ouvrir le carnet' }}
+          </RouterLink>
+          <p v-if="commence" class="reprise">
+            {{ progression.nbTampons }} tampon(s) sur {{ FRESQUES.length }}
+          </p>
+          <RouterLink v-else class="lien-discret" :to="{ name: 'a-propos' }">À propos</RouterLink>
+        </div>
       </div>
-
-      <RouterLink class="bouton bouton--bloc" to="/parcours">
-        {{ commence ? 'Reprendre le parcours' : 'Commencer le parcours' }}
-      </RouterLink>
-
-      <RouterLink class="lien-discret" to="/a-propos">À propos du dispositif</RouterLink>
-    </div>
+    </article>
   </section>
 </template>
 
@@ -54,139 +46,99 @@ const commence = computed(() => progression.nbTampons > 0)
   min-height: 100svh;
   display: grid;
   place-items: center;
-  padding: calc(1.2rem + env(safe-area-inset-top, 0px)) 1rem
-           calc(1.2rem + env(safe-area-inset-bottom, 0px));
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem
+           calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
-.couverture__carnet {
+.livre {
+  display: flex;
   width: 100%;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-  padding: 1.2rem;
-  background: var(--papier-clair);
-  border: 1px solid var(--ligne);
-  border-radius: 26px;
-  box-shadow: var(--ombre-3);
-  /* Stitched spine of the notebook. */
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      var(--kraft-fonce) 0 10px,
-      transparent 10px 22px
-    ),
-    linear-gradient(to right, var(--papier-ombre) 0 14px, transparent 14px);
-  background-size: 2px 100%, 100% 100%;
-  background-position: 7px 0, 0 0;
-  background-repeat: no-repeat;
-  padding-left: 1.9rem;
-}
-
-.entete { text-align: center; }
-.titre {
-  font-size: clamp(2.6rem, 14vw, 3.6rem);
-  letter-spacing: 0.02em;
-  margin: 0.15rem 0 0.35rem;
-}
-.sous-titre { font-size: 0.93rem; color: var(--encre-douce); }
-
-/* --- Illustrated vignette, pure CSS --- */
-.vignette {
-  position: relative;
-  height: 148px;
-  border-radius: var(--rayon-s);
+  max-width: 400px;
+  min-height: min(76svh, 620px);
+  border-radius: 4px 14px 14px 4px;
   overflow: hidden;
-  border: 1px solid var(--ligne);
-  background: linear-gradient(180deg, #e7f0f1 0%, #f4ece0 62%, #ecdfc8 100%);
-}
-.vignette__astre {
-  position: absolute;
-  top: 18px;
-  right: 26px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--or);
-  opacity: 0.85;
-  box-shadow: 0 0 0 10px rgba(217, 164, 65, 0.16);
-}
-.vignette__colline {
-  position: absolute;
-  bottom: -60px;
-  border-radius: 50% 50% 0 0;
-}
-.vignette__colline--loin {
-  left: -18%;
-  width: 90%;
-  height: 128px;
-  background: #9fbf9c;
-}
-.vignette__colline--pres {
-  right: -22%;
-  width: 96%;
-  height: 112px;
-  background: var(--mousse);
-}
-.vignette__repere {
-  position: absolute;
-  bottom: calc(18px + var(--i) * 9px);
-  left: calc(14% + (var(--i) - 1) * 30%);
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font: 700 0.75rem/1 var(--serif);
-  color: var(--encre);
   background: var(--papier-clair);
-  border: 1.5px solid var(--encre);
-  box-shadow: var(--ombre-2);
+  box-shadow: var(--ombre-3);
 }
 
-/* --- Steps ----------------------------------------------------------------- */
-.etapes {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: etape;
+.livre__tranche {
+  flex: none;
+  width: 22px;
+  background: linear-gradient(90deg, #cbb495 0%, #ddcbb0 55%, #efe6d6 100%);
+  border-right: 1px solid rgba(46, 40, 35, 0.14);
+}
+
+.livre__plat {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  align-items: center;
+  text-align: center;
+  padding: 2.4rem 1.6rem 1.6rem;
 }
-.etapes li {
-  counter-increment: etape;
-  position: relative;
-  padding-left: 2rem;
-  font-size: 0.88rem;
-  color: var(--encre-douce);
-}
-/* Absolute: in flex the <b> became its own item and broke the text. */
-.etapes li::before {
-  content: counter(etape);
-  position: absolute;
-  left: 0;
-  top: 0.1em;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  font: 700 0.72rem/1 var(--sans);
-  color: var(--papier-clair);
-  background: var(--kraft-fonce);
-}
-.etapes b { color: var(--encre); }
 
-.reprise { display: flex; flex-direction: column; gap: 0.35rem; }
+.editeur {
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kraft-fonce);
+}
+
+.titre-bloc {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+}
+
+.filet {
+  width: 54px;
+  height: 1px;
+  background: var(--encre);
+  opacity: 0.45;
+}
+
+.titre {
+  font-size: clamp(2.8rem, 15vw, 3.9rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.sous-titre {
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+  /* letter-spacing pushes the text right; pull it back to stay centred */
+  text-indent: 0.3em;
+}
+
+.accroche {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--encre-douce);
+  margin-bottom: auto;
+}
+
+.livre__bas {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.reprise { font-size: 0.75rem; color: var(--encre-pale); }
 
 .lien-discret {
-  text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--encre-pale);
   text-decoration: none;
-  border-bottom: 1px dashed var(--ligne-forte);
-  align-self: center;
-  padding-bottom: 1px;
 }
 </style>
