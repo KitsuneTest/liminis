@@ -45,6 +45,7 @@ function collecter(fragmentId) {
     <ScanneurAR
       :collectes="etat.fragments"
       :nb-fragments="config.nbFragments"
+      :teinte-cible="config.teinteCible"
       @collecte="collecter"
     />
 
@@ -61,14 +62,22 @@ function collecter(fragmentId) {
     </div>
 
     <div v-else class="feuille feuille--teintee aide">
+      <img
+        class="aide__photo"
+        :src="config.photo"
+        :style="{ objectPosition: config.cadrage }"
+        :alt="`Fresque ${config.nom}`"
+        loading="lazy"
+        decoding="async"
+      />
       <p class="legende">
-        Reculez d'un pas et cadrez la fresque entière. Les fragments flottent
-        devant elle : touchez-les pour les récolter. Rien ne se perd, vous pouvez
-        fermer la caméra et revenir plus tard.
+        Voici le mur à chercher. Reculez d'un pas et cadrez-le en entier : les
+        fragments flottent devant lui, touchez-les pour les récolter. Rien ne se
+        perd, vous pouvez fermer la caméra et revenir plus tard.
       </p>
     </div>
 
-    <RouterLink class="retour" to="/parcours">← Retour au parcours</RouterLink>
+    <RouterLink class="retour" :to="{ name: 'tampon-detail', params: { id } }">← Retour à la fiche</RouterLink>
   </section>
 
   <section v-else class="feuille">
@@ -128,6 +137,15 @@ function collecter(fragmentId) {
   border: 1px solid var(--vert-valide);
   border-radius: 999px;
   padding: 0.5rem;
+}
+
+.aide { display: flex; flex-direction: column; gap: 0.85rem; }
+.aide__photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--rayon-s);
+  border: 1px solid var(--ligne);
 }
 
 .fin { display: flex; flex-direction: column; gap: 0.55rem; text-align: center; }
