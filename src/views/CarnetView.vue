@@ -117,7 +117,8 @@ const actif = computed(() =>
 .carnet__page {
   background: var(--surface);
   border: 1px solid var(--ligne);
-  border-radius: 0 var(--rayon) var(--rayon) var(--rayon);
+  /* Square top edge: the tabs sit flush on it, like a tabbed folder. */
+  border-radius: 0 0 var(--rayon) var(--rayon);
   box-shadow: var(--ombre-1);
   padding: 1.2rem 1.1rem 1.4rem;
   min-height: 60svh;
