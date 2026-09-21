@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useProgression } from '../stores/progression'
+import { useProgression } from '../../stores/progression'
 
 const progression = useProgression()
 const confirme = ref(false)

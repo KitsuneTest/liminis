@@ -1,7 +1,7 @@
 <script setup>
 // Personality quiz, then the companion reveal, wired to the store.
 import { computed, ref } from 'vue'
-import { useProgression } from '../stores/progression'
+import { useProgression } from '../../stores/progression'
 
 const progression = useProgression()
 
@@ -108,7 +108,7 @@ function recommencer() {
       </div>
 
       <div class="outils">
-        <RouterLink class="bouton bouton--petit" to="/carnet">Voir le carnet</RouterLink>
+        <RouterLink class="bouton bouton--petit" :to="{ name: 'tampons' }">Voir mes tampons</RouterLink>
         <button class="bouton bouton--petit bouton--secondaire" type="button" @click="recommencer">
           Refaire le questionnaire
         </button>

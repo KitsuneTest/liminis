@@ -3,8 +3,42 @@ import { useProgression } from '../stores/progression'
 
 const routes = [
   { path: '/', name: 'accueil', component: () => import('../views/AccueilView.vue') },
-  { path: '/parcours', name: 'parcours', component: () => import('../views/ParcoursView.vue') },
-  { path: '/carnet', name: 'carnet', component: () => import('../views/CarnetView.vue') },
+  {
+    path: '/parcours',
+    name: 'parcours',
+    component: () => import('../views/ParcoursView.vue'),
+    meta: { plein: true },
+  },
+  { path: '/scanner', name: 'scanner', component: () => import('../views/ScannerView.vue') },
+  {
+    path: '/carnet',
+    component: () => import('../views/CarnetView.vue'),
+    children: [
+      { path: '', redirect: { name: 'tampons' } },
+      { path: 'tampons', name: 'tampons', component: () => import('../views/carnet/TamponsView.vue') },
+      {
+        path: 'tampons/:id',
+        name: 'tampon-detail',
+        component: () => import('../views/carnet/TamponDetailView.vue'),
+      },
+      {
+        path: 'fragments',
+        name: 'fragments',
+        component: () => import('../views/carnet/FragmentsView.vue'),
+      },
+      {
+        path: 'familier',
+        name: 'familier',
+        component: () => import('../views/carnet/FamilierView.vue'),
+        meta: { verrou: 'familier' },
+      },
+      {
+        path: 'a-propos',
+        name: 'a-propos',
+        component: () => import('../views/carnet/AproposView.vue'),
+      },
+    ],
+  },
   { path: '/fresque/:id', name: 'fresque-ar', component: () => import('../views/FresqueARView.vue') },
   {
     path: '/fresque/:id/microscopique',
@@ -12,18 +46,14 @@ const routes = [
     component: () => import('../views/MicroscopiqueView.vue'),
     meta: { verrou: 'microscopique' },
   },
-  { path: '/a-propos', name: 'a-propos', component: () => import('../views/AproposView.vue') },
-  {
-    path: '/familier',
-    name: 'familier',
-    component: () => import('../views/FamilierView.vue'),
-    meta: { verrou: 'familier' },
-  },
 ]
 
-const router = createRouter({ history: createWebHistory(), routes })
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+  scrollBehavior: (to, from, saved) => saved ?? { top: 0 },
+})
 
-// Page locking driven by progress (read from the store)
 router.beforeEach(async (to) => {
   const p = useProgression()
 
@@ -31,7 +61,8 @@ router.beforeEach(async (to) => {
   // been read: without this wait a locked page bounces back to the trail.
   await p.pret()
 
-  if (to.meta.verrou === 'familier' && !p.pageFamilierDisponible) return '/parcours'
+  if (to.meta.verrou === 'familier' && !p.pageFamilierDisponible)
+    return { name: 'tampons' }
   if (to.meta.verrou === 'microscopique' && !p.microscopiqueDebloquee(to.params.id))
     return `/fresque/${to.params.id}`
   return true
