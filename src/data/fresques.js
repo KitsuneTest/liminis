@@ -1,47 +1,57 @@
 // Configuration for the 3 murals on the trail.
-// Technical fields are read by the store; nom, sousTitre, indice and couleur by the views.
+// Technical fields are read by the store; the rest by the views.
 
-// Map home: UNC Nouville campus, Nouméa. The map opens here and stays here
-// until the visitor taps "Moi".
-export const CENTRE_PARCOURS = { lat: -22.26889, lng: 166.41944, zoom: 16 }
+// Campus de Nouville, framed on the three murals rather than on the whole site.
+export const CENTRE_PARCOURS = { lat: -22.26281, lng: 166.40398, zoom: 17 }
 
-// ⚠️ Mural positions are placeholders spread across the campus: walk the site
-// and replace each pair with a real reading.
+// Positions derived from the OSM landmarks named in `lieu` (BU, restaurant
+// universitaire, bâtiment S). ⚠️ Still to confirm wall by wall on site.
 export const FRESQUES = [
   {
-    id: 'fresque-1',
-    nom: 'Fresque 1',
-    sousTitre: 'Le seuil',
-    indice: "Cherchez le mur qui prend la lumière du matin.",
+    id: 'hibiscus',
+    nom: 'Hibiscus',
+    sousTitre: 'La chimie des couleurs',
+    lieu: 'BU · Terrasse Sisters Food',
+    indice: 'Sous la coursive, le long de la terrasse en bois.',
+    photo: '/fresques/hibiscus.jpg',
+    cadrage: 'center 58%',
+    couleur: 'terre',
+    teinteCible: [330, 30], // warm reds, wrapping past 0°
+    lat: -22.26268,
+    lng: 166.40458,
+    rayon: 18,
+    nbFragments: 3,
+    cibleAR: '/ar/hibiscus/targets.mind',
+  },
+  {
+    id: 'loriquet',
+    nom: 'Loriquet',
+    sousTitre: 'Le langage des plumes',
+    lieu: 'Terrasse de la BU',
+    indice: "À l'entrée du patio, contre la baie vitrée.",
+    photo: '/fresques/loriquet.jpg',
     couleur: 'mousse',
-    lat: -22.2678, // TODO: survey the real latitude
-    lng: 166.4186, // TODO: survey the real longitude
-    rayon: 25, // validation zone radius, in metres
-    nbFragments: 4, // how many fragments to collect in AR
-    cibleAR: '/ar/fresque-1/targets.mind',
+    teinteCible: [75, 155], // foliage greens
+    lat: -22.2629,
+    lng: 166.4048,
+    rayon: 18,
+    nbFragments: 3,
+    cibleAR: '/ar/loriquet/targets.mind',
   },
   {
-    id: 'fresque-2',
-    nom: 'Fresque 2',
-    sousTitre: 'La lisière',
-    indice: 'Au bout du passage, là où les arbres reprennent la main.',
+    id: 'tortue',
+    nom: 'Tortue marine',
+    sousTitre: 'Les architectes du récif',
+    lieu: 'Près du fablab',
+    indice: 'Sur le mur en contrebas, côté bâtiment S.',
+    photo: '/fresques/tortue.jpg',
+    cadrage: 'center 78%',
     couleur: 'lagon',
-    lat: -22.2695,
-    lng: 166.4205,
-    rayon: 25,
-    nbFragments: 4,
-    cibleAR: '/ar/fresque-2/targets.mind',
-  },
-  {
-    id: 'fresque-3',
-    nom: 'Fresque 3',
-    sousTitre: 'La crue',
-    indice: "Suivez l'eau : elle mène au dernier mur.",
-    couleur: 'prune',
-    lat: -22.2702,
-    lng: 166.4178,
-    rayon: 25,
-    nbFragments: 4,
-    cibleAR: '/ar/fresque-3/targets.mind',
+    teinteCible: [185, 235], // lagoon blues
+    lat: -22.26293,
+    lng: 166.40316,
+    rayon: 18,
+    nbFragments: 3,
+    cibleAR: '/ar/tortue/targets.mind',
   },
 ]

@@ -115,8 +115,12 @@ export const useProgression = defineStore('progression', {
       }
       if (sauvegarde) this.$patch(sauvegarde)
 
-      // An older save may not know every mural: without this top-up the views
-      // read `undefined.tampon` and the app crashes.
+      // An older save may not match the current murals: top up what is missing
+      // and drop renamed ids, which would otherwise inflate nbTampons.
+      const connus = new Set(FRESQUES.map((f) => f.id))
+      for (const id of Object.keys(this.fresques)) {
+        if (!connus.has(id)) delete this.fresques[id]
+      }
       for (const f of FRESQUES) {
         if (!this.fresques[f.id]) this.fresques[f.id] = { tampon: false, fragments: [] }
         else if (!Array.isArray(this.fresques[f.id].fragments))
@@ -139,15 +143,20 @@ export const useProgression = defineStore('progression', {
       // Signal too rough to claim anything.
       if (accuracy > 40) return null
 
+      // Two murals sit ~30 m apart, so their zones overlap: take the closest
+      // one rather than the first that matches.
+      let gagnante = null
+      let meilleure = Infinity
       for (const f of FRESQUES) {
         if (this.fresques[f.id].tampon) continue // already validated
         const d = distanceMetres(userPos, { lat: f.lat, lng: f.lng })
-        if (d <= f.rayon + accuracy) {
-          this.poserTampon(f.id)
-          return f.id
+        if (d <= f.rayon + accuracy && d < meilleure) {
+          meilleure = d
+          gagnante = f.id
         }
       }
-      return null
+      if (gagnante) this.poserTampon(gagnante)
+      return gagnante
     },
 
     // Lays down a stamp (used by GPS, or by a fallback QR code)
