@@ -1,296 +1,297 @@
+/* LIMINIS — "field notebook" design system.
+   Offline-safe: no remote font or image, as the PWA requires. */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* --- Paper & ink --- */
+  --papier:        #f4efe6;
+  --papier-clair:  #fffdf8;
+  --papier-ombre:  #e9e1d3;
+  --kraft:         #ded3c0;
+  --kraft-fonce:   #b09a7d;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --encre:         #2e2823;
+  --encre-douce:   #6b6058;
+  --encre-pale:    #9a8f84;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  /* --- Accents, taken from the murals --- */
+  --mousse:        #4f8a62;
+  --mousse-clair:  #dcebe0;
+  --lagon:         #2f8496;
+  --lagon-clair:   #d6eaee;
+  --terre:         #c4643c;
+  --terre-clair:   #f8e0d4;
+  --prune:         #7659a6;
+  --prune-clair:   #e8dff5;
+  --or:            #d3a03c;
+
+  --rouge-tampon:  #b03a4c;
+  --vert-valide:   #2c7a52;
+
+  /* --- Semantic surfaces: prefer these over raw paper tokens --- */
+  --surface:       var(--papier-clair);
+  --surface-2:     #faf5ea;
+  --ligne:         rgba(46, 40, 35, 0.10);
+  --ligne-forte:   rgba(46, 40, 35, 0.18);
+
+  /* --- Structure --- */
+  --rayon:       20px;
+  --rayon-s:     14px;
+  --rayon-xs:    10px;
+  --trait:       1px solid var(--ligne);
+  --trait-fin:   1px solid var(--ligne);
+
+  /* Layered shadows read as depth; a single hard offset reads as a sticker. */
+  --ombre-1: 0 1px 2px rgba(46, 40, 35, 0.06), 0 2px 8px -2px rgba(46, 40, 35, 0.07);
+  --ombre-2: 0 2px 4px rgba(46, 40, 35, 0.05), 0 8px 20px -6px rgba(46, 40, 35, 0.13);
+  --ombre-3: 0 4px 10px rgba(46, 40, 35, 0.07), 0 18px 40px -12px rgba(46, 40, 35, 0.22);
+  --ombre: var(--ombre-1);
+  --ombre-carte: var(--ombre-2);
+
+  /* One easing for everything that moves. */
+  --ressort: cubic-bezier(0.34, 1.3, 0.5, 1);
+  --doux: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --sans:  'Avenir Next', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+
+  font: 16px/1.6 var(--sans);
+  color: var(--encre);
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  -webkit-text-size-adjust: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
-
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-}
-
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#app {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
+  color: var(--encre);
+  /* Grain and halo in pure CSS: nothing to download. */
+  background-color: var(--papier);
+  background-image:
+    radial-gradient(60% 50% at 15% 0%, rgba(255, 255, 255, 0.9), transparent 70%),
+    radial-gradient(50% 40% at 90% 100%, rgba(199, 178, 146, 0.28), transparent 70%),
+    repeating-linear-gradient(52deg, rgba(160, 138, 104, 0.028) 0 2px, transparent 2px 6px);
+  background-attachment: fixed;
+}
+
+/* --- Headings -------------------------------------------------------------- */
+h1, h2, h3 {
+  font-family: var(--serif);
+  color: var(--encre);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+h1 { font-size: clamp(1.75rem, 6vw, 2.35rem); }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.05rem; }
+p  { margin: 0; text-wrap: pretty; }
+
+/* Chapter heading: a title followed by a hairline rule */
+.titre-chapitre {
   display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  align-items: center;
+  gap: 0.85rem;
+}
+.titre-chapitre::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--ligne-forte), transparent);
 }
 
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+.surtitre {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kraft-fonce);
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
+.legende { font-size: 0.875rem; line-height: 1.55; color: var(--encre-douce); }
 
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
+/* --- Sheet: the base container --------------------------------------------- */
+.feuille {
   position: relative;
-  width: 100%;
+  background: var(--surface);
+  border: var(--trait);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre-1);
+  padding: 1.25rem;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+/* "Stitched" variant: a dashed rule set in from the edge. */
+.feuille--cousue::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed var(--kraft);
+  border-radius: calc(var(--rayon) - 7px);
+  pointer-events: none;
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+.feuille--teintee { background: var(--surface-2); }
+
+/* --- Buttons --------------------------------------------------------------- */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font: 600 0.94rem/1 var(--sans);
+  letter-spacing: 0.005em;
+  color: var(--papier-clair);
+  background: var(--encre);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.85rem 1.4rem;
+  min-height: 46px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--ombre-2);
+  transition: transform 0.2s var(--ressort), box-shadow 0.2s var(--doux),
+    background 0.2s var(--doux);
+  -webkit-tap-highlight-color: transparent;
+}
+.bouton:hover { box-shadow: var(--ombre-3); }
+.bouton:active { transform: scale(0.965); box-shadow: var(--ombre-1); }
+.bouton[disabled] { opacity: 0.4; pointer-events: none; box-shadow: none; }
+
+.bouton--secondaire {
+  color: var(--encre);
+  background: var(--surface);
+  border-color: var(--ligne-forte);
+  box-shadow: var(--ombre-1);
+}
+.bouton--secondaire:hover { background: var(--surface-2); box-shadow: var(--ombre-2); }
+
+.bouton--accent { background: var(--terre); }
+.bouton--bloc  { width: 100%; }
+.bouton--petit { padding: 0.6rem 1rem; min-height: 38px; font-size: 0.82rem; }
+
+/* --- Tags ------------------------------------------------------------------ */
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font: 650 0.7rem/1 var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+/* "8 m", not "8 M". */
+.puce--mesure { text-transform: none; letter-spacing: 0; font-size: 0.76rem; font-weight: 600; }
+
+.puce--ok      { color: var(--vert-valide);  background: var(--mousse-clair); }
+.puce--attente { color: var(--encre-douce);  background: var(--papier-ombre); }
+.puce--alerte  { color: var(--rouge-tampon); background: var(--terre-clair); }
+
+/* --- Stamp: the central motif of the notebook ------------------------------ */
+.tampon {
+  --teinte: var(--rouge-tampon);
+  --taille: 72px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--taille);
+  height: var(--taille);
+  /* The caption must wrap inside the disc, not spill out. */
+  padding: 0 10px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--teinte);
+  color: var(--teinte);
+  font-family: var(--serif);
+  text-align: center;
+  line-height: 1.05;
+  transform: rotate(-7deg);
+  transition: transform 0.4s var(--ressort);
+}
+.tampon::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0.55;
+}
+.tampon__num { font-size: 1.45rem; font-weight: 700; }
+.tampon__txt {
+  font-size: 0.46rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+/* Empty slot: the hollow left to fill */
+.tampon--vide {
+  border-style: dashed;
+  border-color: var(--kraft);
+  color: var(--encre-pale);
+  transform: none;
+}
+.tampon--vide::before { display: none; }
+
+/* --- Washi tape ------------------------------------------------------------ */
+.bandeau-washi {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    100deg,
+    var(--mousse) 0%,
+    var(--lagon) 32%,
+    var(--or) 62%,
+    var(--terre) 100%
+  );
+  opacity: 0.9;
+}
+
+/* --- Progress bar ---------------------------------------------------------- */
+.jauge {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--papier-ombre);
+  overflow: hidden;
+}
+.jauge__valeur {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mousse), #6aa87a);
+  transition: width 0.7s var(--doux);
+}
+
+/* --- Odds and ends --------------------------------------------------------- */
+.separateur {
+  border: 0;
+  border-top: 1px dashed var(--kraft);
+  margin: 1.2rem 0;
+}
+
+.pile   { display: flex; flex-direction: column; gap: 1rem; }
+.rangee { display: flex; align-items: center; gap: 0.75rem; }
+
+a { color: var(--lagon); }
+
+button, input, select { font-family: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--lagon);
+  outline-offset: 3px;
+  border-radius: var(--rayon-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
