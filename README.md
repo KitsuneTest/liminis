@@ -40,27 +40,29 @@ src/
 ├── data/fresques.js        ⚠️ config des 3 fresques — À REMPLIR
 ├── composables/
 │   └── useGeoloc.js        suivi GPS → validation de zone
-├── components/             (à créer : Carte, SceneAR, VisionEchelles, Quiz…)
+├── components/
+│   ├── CarteParcours.vue   carte Leaflet + marqueurs + position
+│   └── ScanneurAR.vue      viseur caméra + fragments à collecter
 └── views/                  une vue par page
 ```
 
+Le style commun (papier, tampons, boutons, jauges) vit dans `src/style.css` :
+réutiliser `.feuille`, `.bouton`, `.tampon`, `.puce` plutôt que redéfinir.
+
 ## Répartition du travail
 
-Le socle et le store sont déjà en place : chacun peut prendre une brique sans
-bloquer les autres. Les emplacements sont marqués `TODO` dans le code.
+Le parcours est jouable de bout en bout. Ce qui reste à approfondir :
 
-| Brique | Fichier à créer | Techno | Point d'entrée dans le store |
-|---|---|---|---|
-| Carte & parcours | `components/Carte.vue` | Leaflet + leaflet.offline | `verifierZone()` (déjà câblé) |
-| Réalité augmentée | `components/SceneAR.vue` | MindAR + A-Frame | `collecterFragment(id, frag)` |
-| Vision d'échelles | `components/VisionEchelles.vue` | GSAP | `microscopiqueDebloquee(id)` |
-| Carnet & export PDF | `components/CarnetImprimable.vue` | html2canvas + jsPDF | lecture de `fresques`, `resume` |
-| Quiz & familier | `components/Quiz.vue` | Vue | `repondreQuiz()`, `debloquerFamilier()` |
-
-À installer au moment d'attaquer sa brique :
+| Brique | État | Reste à faire |
+|---|---|---|
+| Carte & parcours | ✅ `components/CarteParcours.vue` | tuiles hors-ligne (`leaflet.offline`) |
+| Caméra | ✅ `components/ScanneurAR.vue` | suivi d'image MindAR — voir `public/ar/README.md` |
+| Vision d'échelles | maquette dans `MicroscopiqueView.vue` | visuels réels + transitions GSAP |
+| Quiz & familier | ✅ `FamilierView.vue` | illustrations des 3 familiers |
+| Carnet | ✅ `CarnetView.vue` | export PDF (html2canvas + jsPDF) |
 
 ```bash
-npm install mind-ar aframe        # AR
+npm install mind-ar aframe        # suivi d'image AR
 npm install gsap                  # vision d'échelles
 npm install html2canvas jspdf     # export PDF
 npm install leaflet.offline       # tuiles hors-ligne
@@ -68,10 +70,14 @@ npm install leaflet.offline       # tuiles hors-ligne
 
 ## À faire en priorité
 
+La liste complète — quoi produire, où le déposer, quelle ligne toucher — est
+dans **[A_FAIRE.md](A_FAIRE.md)**. Les deux points bloquants :
+
 1. Relever les **coordonnées GPS réelles** des 3 fresques → `src/data/fresques.js`
-2. Ajouter les **icônes PWA** (192 et 512 px) dans `public/icons/`
-3. Compiler les **cibles AR** (`.mind`) depuis les photos des fresques → `public/ar/`
-4. **Tester l'AR sur la vraie fresque** (lumière, angle) — c'est le principal risque du projet
+   (la carte est centrée sur le campus de Nouville, mais les 3 repères y sont
+   placés approximativement)
+2. Compiler les **cibles AR** (`.mind`) et **tester sur la vraie fresque** —
+   c'est le principal risque du projet
 
 ## Conventions d'équipe
 
