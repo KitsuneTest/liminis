@@ -8,7 +8,11 @@ const router = useRouter()
 const progression = useProgression()
 const { demarrer, position, statut } = useGeoloc()
 
-onMounted(() => demarrer())
+onMounted(() => {
+  demarrer()
+  // The AR engine weighs several MB: fetch it while the visitor picks a mural.
+  import('mind-ar/dist/mindar-image-three.prod.js').catch(() => {})
+})
 
 const parDistance = computed(() => {
   if (!position.value) return FRESQUES.map((f) => ({ f, d: null }))
