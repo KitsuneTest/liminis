@@ -1,30 +1,18 @@
 <script setup>
-// Scale vision: a playable mock-up until VisionEchelles.vue (GSAP) lands.
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProgression } from '../stores/progression'
+import { ECHELLES } from '../data/echelles'
+import VisionEchelles from '../components/VisionEchelles.vue'
 
 const route = useRoute()
 const progression = useProgression()
 const config = computed(() => progression.fresqueConfig(route.params.id))
+const echelles = computed(() => ECHELLES[route.params.id] ?? [])
 
-const ECHELLES = [
-  { nom: 'Le mur', taille: '1 m', texte: "La fresque telle qu'on la voit en passant.", teinte: 'var(--terre)' },
-  { nom: 'La peau', taille: '1 cm', texte: 'Le grain de la pierre, les couches de peinture.', teinte: 'var(--or)' },
-  { nom: 'La colonie', taille: '1 mm', texte: 'Lichens et mousses habitent déjà le pigment.', teinte: 'var(--mousse)' },
-  { nom: 'La cellule', taille: '10 µm', texte: 'Le vivant a pris la fresque pour un territoire.', teinte: 'var(--lagon)' },
-]
-
+const vision = ref(null)
 const niveau = ref(0)
-const courante = computed(() => ECHELLES[niveau.value])
-
-// Computed here: calc() has no modulo, so the CSS rule was silently dropped.
-const GRAINS = Array.from({ length: 14 }, (_, i) => ({
-  taille: 8 + ((i * 7) % 11) * 5,
-  top: 6 + ((i * 37) % 80),
-  left: 6 + ((i * 53) % 80),
-  delai: -(i * 0.4).toFixed(1),
-}))
+const courante = computed(() => echelles.value[niveau.value])
 </script>
 
 <template>
@@ -32,53 +20,37 @@ const GRAINS = Array.from({ length: 14 }, (_, i) => ({
     <header>
       <p class="surtitre">Étape 3 — au plus près</p>
       <h1 class="titre-chapitre">Vision d'échelles</h1>
-      <p class="legende sous">{{ config?.nom }} — du visible au microscopique</p>
+      <p class="legende sous">{{ config?.nom }} — du visible à la molécule</p>
     </header>
 
-    <div class="hublot" :style="{ '--teinte': courante.teinte }">
-      <div class="hublot__fond">
-        <span
-          v-for="(g, i) in GRAINS"
-          :key="i"
-          class="grain"
-          :style="{
-            width: g.taille + 'px',
-            height: g.taille + 'px',
-            top: g.top + '%',
-            left: g.left + '%',
-            animationDelay: g.delai + 's',
-          }"
-        ></span>
-      </div>
+    <div class="hublot">
+      <VisionEchelles
+        v-if="config && echelles.length"
+        ref="vision"
+        :fresque="config"
+        :echelles="echelles"
+        @niveau="niveau = $event"
+      />
       <div class="hublot__cadre"></div>
-      <p class="hublot__taille">{{ courante.taille }}</p>
+      <p class="hublot__taille">{{ courante?.taille }}</p>
     </div>
 
-    <div class="feuille lecture">
+    <p class="geste">Pincez pour zoomer · glissez pour tourner</p>
+
+    <div v-if="courante" class="feuille lecture">
       <h2>{{ courante.nom }}</h2>
       <p class="legende">{{ courante.texte }}</p>
     </div>
 
-    <div class="reglage">
-      <input
-        v-model.number="niveau"
-        class="curseur"
-        type="range"
-        min="0"
-        :max="ECHELLES.length - 1"
-        step="1"
-        aria-label="Niveau de zoom"
-      />
-      <div class="reglage__crans">
-        <button
-          v-for="(e, i) in ECHELLES"
-          :key="e.nom"
-          class="cran"
-          :class="{ 'cran--actif': i === niveau }"
-          type="button"
-          @click="niveau = i"
-        >{{ e.taille }}</button>
-      </div>
+    <div class="crans">
+      <button
+        v-for="(e, i) in echelles"
+        :key="e.nom"
+        class="cran"
+        :class="{ 'cran--actif': i === niveau }"
+        type="button"
+        @click="vision?.aller(i)"
+      >{{ e.taille }}</button>
     </div>
 
     <RouterLink class="retour" :to="`/fresque/${route.params.id}`">← Retour à la fresque</RouterLink>
@@ -91,39 +63,25 @@ const GRAINS = Array.from({ length: 14 }, (_, i) => ({
 .hublot {
   position: relative;
   aspect-ratio: 1;
-  max-height: 46svh;
   margin: 0 auto;
-  width: min(100%, 340px);
+  width: min(100%, 360px, 52svh);
   border-radius: 50%;
   overflow: hidden;
   border: 4px solid var(--encre);
-  box-shadow: var(--ombre-carte), inset 0 0 40px rgba(59, 47, 36, 0.35);
-  background: var(--teinte);
-  transition: background 0.6s ease;
-}
-.hublot__fond { position: absolute; inset: 0; }
-
-.grain {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(253, 248, 236, 0.55);
-  animation: derive 9s ease-in-out infinite alternate;
-}
-@keyframes derive {
-  from { transform: translate(0, 0) scale(0.9); opacity: 0.35; }
-  to   { transform: translate(14px, -12px) scale(1.15); opacity: 0.8; }
+  box-shadow: var(--ombre-carte);
+  background: #17142f;
 }
 
 .hublot__cadre {
   position: absolute;
-  inset: 12px;
+  inset: 0;
   border-radius: 50%;
-  border: 2px dashed rgba(253, 248, 236, 0.6);
+  box-shadow: inset 0 0 40px rgba(23, 20, 47, 0.7);
   pointer-events: none;
 }
 .hublot__taille {
   position: absolute;
-  bottom: 14%;
+  bottom: 9%;
   left: 50%;
   transform: translateX(-50%);
   font: 700 0.75rem/1 var(--sans);
@@ -133,18 +91,18 @@ const GRAINS = Array.from({ length: 14 }, (_, i) => ({
   border: 2px solid var(--encre);
   border-radius: 999px;
   padding: 0.35rem 0.7rem;
+  pointer-events: none;
+}
+
+.geste {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--encre-pale);
 }
 
 .lecture { text-align: center; }
 
-.reglage { display: flex; flex-direction: column; gap: 0.5rem; }
-
-.curseur {
-  width: 100%;
-  accent-color: var(--terre);
-}
-
-.reglage__crans { display: flex; justify-content: space-between; gap: 0.3rem; }
+.crans { display: flex; justify-content: space-between; gap: 0.3rem; }
 .cran {
   flex: 1;
   font: 700 0.68rem/1 var(--sans);
