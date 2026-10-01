@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import { molecule } from './molecules'
+import { PALETTE } from './palette'
 
-const COULEURS_ATOMES = { C: '#6A4AA8', O: '#C74F20', N: '#3DBDB5', H: '#FBF0DE', R: '#F5CF45' }
+const COULEURS_ATOMES = { C: PALETTE.prune, O: PALETTE.terre, N: PALETTE.lagon, H: PALETTE.papier, R: PALETTE.or }
 const RAYONS_ATOMES = { C: 0.28, O: 0.3, N: 0.29, H: 0.17, R: 0.32 }
 
 function aleatoire(graine) {
@@ -47,7 +48,7 @@ function photo(niveau, fresque) {
   const plan = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true }))
   const fond = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({ color: 0x17142f, transparent: true, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: PALETTE.nuit, transparent: true, depthWrite: false })
   )
   fond.position.z = -0.01
   const depart = fresque.depart ?? { u: 0.5, v: 0.5 }
@@ -157,7 +158,7 @@ function cellules(niveau) {
 
 function plume(niveau) {
   const groupe = new THREE.Group()
-  const rachis = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.06, 3.4, 12), materiau('#FBF0DE'))
+  const rachis = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.06, 3.4, 12), materiau(PALETTE.papier))
   groupe.add(rachis)
 
   const nombre = 34
@@ -329,8 +330,8 @@ function moleculeEnBoules(niveau) {
     groupe.add(boule)
   })
 
-  const lien = materiau('#FBF0DE', { roughness: 0.4 })
-  const pointille = materiau('#3DBDB5', { roughness: 0.4 })
+  const lien = materiau(PALETTE.papier, { roughness: 0.4 })
+  const pointille = materiau(PALETTE.lagon, { roughness: 0.4 })
   const perle = new THREE.SphereGeometry(0.035 * echelle, 8, 6)
   liaisons.forEach(({ a, b, ordre }) => {
     const pa = positions[a].clone().multiplyScalar(echelle)
@@ -366,7 +367,7 @@ const GENERATEURS = { photo, domes, cellules, plume, grains, carapace, molecule:
 
 export function construireNiveau(niveau, fresque) {
   const scene = new THREE.Scene()
-  scene.add(new THREE.HemisphereLight(0xfbf0de, 0x2b2660, 1.7))
+  scene.add(new THREE.HemisphereLight(PALETTE.papier, PALETTE.encre, 1.7))
   const soleil = new THREE.DirectionalLight(0xffffff, 1.6)
   soleil.position.set(2, 3, 4)
   scene.add(soleil)

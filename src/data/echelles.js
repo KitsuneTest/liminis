@@ -1,3 +1,5 @@
+import { PALETTE } from '../lib/palette'
+
 export const ECHELLES = {
   hibiscus: [
     {
@@ -11,7 +13,7 @@ export const ECHELLES = {
       nom: 'Le pétale',
       taille: '0,3 mm',
       texte: "De près, la surface du pétale n'est pas lisse : elle est couverte de petits dômes serrés.",
-      couleur: '#C74F20',
+      couleur: PALETTE.terre,
       fond: '#7a2a0e',
     },
     {
@@ -19,9 +21,9 @@ export const ECHELLES = {
       nom: 'La cellule',
       taille: '30 µm',
       texte: 'Chaque dôme est une cellule. Sa grande vacuole, remplie de pigment, donne au pétale sa couleur.',
-      membrane: '#FBF0DE',
-      interieur: '#C74F20',
-      noyau: '#6A4AA8',
+      membrane: PALETTE.papier,
+      interieur: PALETTE.terre,
+      noyau: PALETTE.prune,
     },
     {
       type: 'molecule',
@@ -43,15 +45,15 @@ export const ECHELLES = {
       nom: 'La plume',
       taille: '1 cm',
       texte: "Un axe central d'où partent des centaines de barbes, elles-mêmes garnies de barbules qui s'agrippent entre elles.",
-      couleurs: ['#3DBDB5', '#F5CF45', '#C74F20'],
+      couleurs: [PALETTE.lagon, PALETTE.or, PALETTE.terre],
     },
     {
       type: 'grains',
       nom: 'La barbe',
       taille: '50 µm',
       texte: 'Dans la kératine de chaque barbe sont rangés des grains de pigment : les mélanosomes.',
-      matrice: '#FBF0DE',
-      grain: '#6A4AA8',
+      matrice: PALETTE.papier,
+      grain: PALETTE.prune,
     },
     {
       type: 'molecule',
@@ -80,8 +82,8 @@ export const ECHELLES = {
       nom: "Les cellules de l'écaille",
       taille: '20 µm',
       texte: "Ces plaques sont faites de cellules aplaties, gorgées de protéines cornées puis empilées en couches serrées. Mortes, elles ont perdu leur noyau.",
-      membrane: '#FBF0DE',
-      interieur: '#F5CF45',
+      membrane: PALETTE.papier,
+      interieur: PALETTE.or,
       noyau: null,
       aplati: 0.45,
     },

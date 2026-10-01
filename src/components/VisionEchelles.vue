@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { construireNiveau, libererNiveau } from '../lib/echelles3d'
+import { PALETTE } from '../lib/palette'
 
 const props = defineProps({
   fresque: { type: Object, required: true },
@@ -157,7 +158,7 @@ function redimensionner() {
 onMounted(() => {
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  renderer.setClearColor(0x17142f)
+  renderer.setClearColor(PALETTE.nuit)
   renderer.autoClear = false
   conteneur.value.appendChild(renderer.domElement)
 

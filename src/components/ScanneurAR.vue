@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { preparerCible } from '../lib/cibleAR'
 import { animerFragment, creerFragment, libererObjet } from '../lib/fragment3d'
+import { PALETTE } from '../lib/palette'
 
 const props = defineProps({
   fresque: { type: Object, required: true },
@@ -221,7 +222,7 @@ async function demarrerCamera() {
       filterMinCF: 0.0001,
       filterBeta: 0.001,
     })
-    instance.scene.add(new THREE.HemisphereLight(0xfbf0de, 0x2c2660, 1.8))
+    instance.scene.add(new THREE.HemisphereLight(PALETTE.papier, PALETTE.encre, 1.8))
     const soleil = new THREE.DirectionalLight(0xffffff, 1.2)
     soleil.position.set(0.5, 1, 2)
     instance.scene.add(soleil)
@@ -320,7 +321,7 @@ onBeforeUnmount(() => {
 .viseur {
   position: relative;
   overflow: hidden;
-  background: #17142f;
+  background: var(--nuit);
 }
 
 .viseur__scene {
@@ -345,7 +346,7 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
-  background: rgba(23, 20, 47, 0.72);
+  background: color-mix(in srgb, var(--nuit) 72%, transparent);
   color: var(--papier);
   font-size: 0.82rem;
   pointer-events: none;
@@ -380,7 +381,7 @@ onBeforeUnmount(() => {
   width: min(50%, 160px);
   height: 3px;
   border-radius: 999px;
-  background: rgba(251, 240, 222, 0.25);
+  background: color-mix(in srgb, var(--papier) 25%, transparent);
   overflow: hidden;
 }
 .jauge i {
