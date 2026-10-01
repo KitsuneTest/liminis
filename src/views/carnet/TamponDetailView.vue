@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProgression } from '../../stores/progression'
+import Icone from '../../components/Icone.vue'
 
 const route = useRoute()
 const progression = useProgression()
@@ -23,13 +24,11 @@ const fragments = computed(() =>
   <section v-if="config" :style="{ '--teinte': `var(--${config.couleur})` }">
     <header class="entete">
       <RouterLink class="retour" :to="{ name: 'tampons' }" aria-label="Retour aux tampons">
-        ‹
+        <Icone nom="chevron-gauche" :taille="22" />
       </RouterLink>
-      <div>
-        <h1>{{ config.nom }}</h1>
-        <p class="sous">{{ config.sousTitre }}</p>
-      </div>
+      <h1>{{ config.nom }}</h1>
     </header>
+    <p class="sous">{{ config.sousTitre }}</p>
 
     <img
       class="photo"
@@ -40,7 +39,7 @@ const fragments = computed(() =>
       decoding="async"
     />
 
-    <p class="lieu"><span aria-hidden="true">◈</span> {{ config.lieu }}</p>
+    <p class="lieu"><Icone nom="repere" :taille="16" /> {{ config.lieu }}</p>
 
     <div class="titre-ligne">
       <h2>Ses fragments</h2>
@@ -50,123 +49,82 @@ const fragments = computed(() =>
     <ul class="fragments">
       <li v-for="f in fragments" :key="f.id">
         <span class="jeton" :class="{ 'jeton--vide': !f.obtenu }">
-          <span v-if="!f.obtenu" class="jeton__cadenas" aria-hidden="true">🔒</span>
+          <Icone v-if="!f.obtenu" nom="cadenas" :taille="14" />
         </span>
       </li>
     </ul>
-
-    <p v-if="!etat.tampon" class="note">
-      Il faut d'abord rejoindre la fresque : le tampon se pose sur place.
-    </p>
-
-    <div class="actions">
-      <RouterLink class="bouton bouton--bloc" :to="`/fresque/${config.id}`">
-        {{ etat.fragments.length ? 'Reprendre la recherche' : 'Chercher les fragments' }}
-      </RouterLink>
-      <RouterLink
-        v-if="progression.fresqueComplete(config.id)"
-        class="bouton bouton--secondaire bouton--bloc"
-        :to="`/fresque/${config.id}/microscopique`"
-      >
-        Vision d'échelles
-      </RouterLink>
-    </div>
   </section>
 
   <section v-else>
     <h1>Fresque inconnue</h1>
     <p class="legende">Aucune fresque ne porte l'identifiant « {{ route.params.id }} ».</p>
-    <RouterLink class="bouton bouton--secondaire" :to="{ name: 'tampons' }">
-      Retour aux tampons
-    </RouterLink>
   </section>
 </template>
 
 <style scoped>
-.entete { display: flex; align-items: flex-start; gap: 0.6rem; margin-bottom: 1rem; }
+.entete { display: flex; align-items: center; gap: 0.5rem; }
 
 .retour {
-  flex: none;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  margin-top: 2px;
-  font-size: 1.5rem;
-  line-height: 1;
+  margin-left: -6px;
   color: var(--encre);
-  text-decoration: none;
-  border-radius: 50%;
-  transition: background 0.2s var(--doux);
 }
-.retour:active { background: var(--papier-ombre); }
 
 .sous {
-  font-size: 0.85rem;
-  color: var(--teinte);
-  font-weight: 600;
-  margin-top: 2px;
+  margin: 0.5rem 0 1.4rem 2.1rem;
+  font-size: 0.82rem;
+  color: var(--encre);
 }
 
 .photo {
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
-  border-radius: var(--rayon-s);
-  border: 1px solid var(--ligne);
-  display: block;
+  border-radius: 8px;
+  background: var(--kraft);
 }
-.photo--voilee { filter: grayscale(0.85) contrast(0.9); opacity: 0.55; }
+.photo--voilee { filter: grayscale(0.7); }
 
 .lieu {
-  margin-top: 0.7rem;
-  font-size: 0.82rem;
-  color: var(--encre-douce);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.7rem;
+  color: var(--encre);
 }
-.lieu span { color: var(--teinte); margin-right: 0.3rem; }
 
 .titre-ligne {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-top: 1.5rem;
+  margin-top: 1.8rem;
 }
-.compte { font-size: 0.85rem; color: var(--encre-douce); }
+.titre-ligne h2 { font-size: 1.15rem; }
+.compte { font-size: 0.78rem; color: var(--encre); }
 
 .fragments {
   list-style: none;
-  margin: 0.8rem 0 0;
+  margin: 1rem 0 0;
   padding: 0;
-  display: flex;
-  gap: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 96px));
+  gap: clamp(0.7rem, 4vw, 1.4rem);
 }
 
 .jeton {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: 50%;
   background: var(--teinte);
-  box-shadow: var(--ombre-2);
 }
 .jeton--vide {
   background: transparent;
-  border: 1.5px dashed var(--kraft-fonce);
-  box-shadow: none;
-}
-.jeton__cadenas { font-size: 0.9rem; opacity: 0.55; }
-
-.note {
-  margin-top: 1rem;
-  font-size: 0.8rem;
+  border: 1.5px dotted var(--encre-pale);
   color: var(--encre-pale);
-}
-
-.actions {
-  margin-top: 1.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
 }
 </style>

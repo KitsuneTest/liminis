@@ -44,7 +44,7 @@ const FAMILIERS = {
     id: 'lichen',
     nom: 'Lichen, le patient',
     trait: "Il pousse d'un millimètre par an et s'en accommode très bien.",
-    teinte: 'var(--mousse)',
+    teinte: 'var(--or)',
     glyphe: '❀',
   },
   corbeau: {
@@ -91,8 +91,8 @@ function recommencer() {
 <template>
   <section class="pile">
     <header>
-      <p class="surtitre">Étape 4 — la rencontre</p>
-      <h1 class="titre-chapitre">Votre familier</h1>
+      <h1>Familier</h1>
+      <hr class="filet" />
     </header>
 
     <!-- Reveal -->

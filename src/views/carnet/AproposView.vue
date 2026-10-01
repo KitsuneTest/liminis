@@ -1,21 +1,8 @@
-<script setup>
-import { ref } from 'vue'
-import { useProgression } from '../../stores/progression'
-
-const progression = useProgression()
-const confirme = ref(false)
-
-async function reinitialiser() {
-  await progression.reinitialiser()
-  confirme.value = false
-}
-</script>
-
 <template>
   <section class="pile">
     <header>
-      <p class="surtitre">Colophon</p>
-      <h1 class="titre-chapitre">À propos</h1>
+      <h1>À propos</h1>
+      <hr class="filet" />
     </header>
 
     <div class="feuille feuille--cousue">
@@ -24,45 +11,20 @@ async function reinitialiser() {
         la carte vous y mène, la caméra en révèle les fragments, le carnet garde
         la trace.
       </p>
-      <hr class="separateur" />
-      <p class="legende">
-        Aucun compte, aucune installation, aucun serveur : la progression reste
-        sur votre appareil et le parcours fonctionne hors-ligne une fois la page
-        chargée.
-      </p>
     </div>
 
     <div class="feuille feuille--teintee">
       <p class="surtitre">Autorisations utilisées</p>
       <ul class="liste">
         <li><b>Position</b> — poser le tampon quand vous entrez dans une zone.</li>
-        <li><b>Caméra</b> — afficher la fresque et ses fragments.</li>
+        <li><b>Caméra</b> — reconnaître la fresque et en révéler les fragments.</li>
       </ul>
       <p class="legende">
-        Les deux exigent une connexion <code>https://</code>. Rien n'est envoyé
-        ni enregistré ailleurs que sur cet appareil.
+        Les deux exigent une connexion <code>https://</code>. Aucun compte, aucune
+        installation, aucun serveur : rien n'est envoyé ailleurs, la progression
+        reste sur votre appareil et le parcours fonctionne hors-ligne une fois la
+        page chargée.
       </p>
-    </div>
-
-    <div class="feuille zone-risque">
-      <p class="surtitre">Réinitialiser</p>
-      <p class="legende">
-        Efface tampons, fragments, quiz et familier. Irréversible.
-      </p>
-      <button
-        v-if="!confirme"
-        class="bouton bouton--petit bouton--secondaire"
-        type="button"
-        @click="confirme = true"
-      >Effacer ma progression</button>
-      <div v-else class="confirmation">
-        <button class="bouton bouton--petit bouton--accent" type="button" @click="reinitialiser">
-          Confirmer l'effacement
-        </button>
-        <button class="bouton bouton--petit bouton--secondaire" type="button" @click="confirme = false">
-          Annuler
-        </button>
-      </div>
     </div>
   </section>
 </template>
@@ -84,13 +46,4 @@ code {
   padding: 1px 4px;
   border-radius: 4px;
 }
-
-.zone-risque {
-  border-color: color-mix(in srgb, var(--rouge-tampon) 40%, transparent);
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  align-items: flex-start;
-}
-.confirmation { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 </style>
