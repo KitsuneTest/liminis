@@ -32,7 +32,7 @@ const fragments = computed(() =>
 
     <img
       class="photo"
-      :class="{ 'photo--voilee': !etat.tampon }"
+      :class="{ 'photo--voilee': !progression.fresqueComplete(config.id) }"
       :src="config.photo"
       :style="{ objectPosition: config.cadrage }"
       :alt="`Fresque ${config.nom}`"

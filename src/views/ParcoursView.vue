@@ -108,6 +108,7 @@ function basculerMusique() {
       <button class="feuillet__tete" type="button" :aria-expanded="ouvert" @click="ouvert = !ouvert">
         <img
           class="feuillet__vignette"
+          :class="{ 'feuillet__vignette--grise': !complete }"
           :src="choisie.photo"
           :style="{ objectPosition: choisie.cadrage }"
           alt=""
@@ -253,6 +254,7 @@ function basculerMusique() {
   object-fit: cover;
   background: var(--kraft);
 }
+.feuillet__vignette--grise { filter: grayscale(0.7); }
 
 .feuillet__texte { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
 .feuillet__nom {
