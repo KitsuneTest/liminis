@@ -1,37 +1,38 @@
 /* LIMINIS — "field notebook" design system.
-   Offline-safe: no remote font or image, as the PWA requires. */
+   Offline-safe: fonts are bundled through @fontsource, never fetched remotely. */
 
 :root {
   /* --- Paper & ink --- */
-  --papier:        #f4efe6;
-  --papier-clair:  #fffdf8;
-  --papier-ombre:  #e9e1d3;
-  --kraft:         #ded3c0;
-  --kraft-fonce:   #b09a7d;
+  --papier:        #fbf0de;
+  --papier-clair:  #fff8ec;
+  --papier-ombre:  #f2e3c9;
+  --kraft:         #e5d2b1;
+  --kraft-fonce:   #b39470;
 
-  --encre:         #2e2823;
-  --encre-douce:   #6b6058;
-  --encre-pale:    #9a8f84;
+  --encre:         #2b2660;
+  --encre-douce:   #5e5a82;
+  --encre-pale:    #918caa;
 
-  /* --- Accents, taken from the murals --- */
-  --mousse:        #4f8a62;
-  --mousse-clair:  #dcebe0;
-  --lagon:         #2f8496;
-  --lagon-clair:   #d6eaee;
-  --terre:         #c4643c;
-  --terre-clair:   #f8e0d4;
-  --prune:         #7659a6;
-  --prune-clair:   #e8dff5;
-  --or:            #d3a03c;
+  /* --- Accents: project palette --- */
+  --mousse:        #2e9c95;
+  --mousse-clair:  #d6f1ee;
+  --lagon:         #3dbdb5;
+  --lagon-clair:   #d9f3f1;
+  --lagon-fonce:   #1e7b76;
+  --terre:         #c74f20;
+  --terre-clair:   #f8dccb;
+  --prune:         #6a4aa8;
+  --prune-clair:   #e7dff5;
+  --or:            #f5cf45;
 
-  --rouge-tampon:  #b03a4c;
-  --vert-valide:   #2c7a52;
+  --rouge-tampon:  #b4441a;
+  --vert-valide:   #1e7b76;
 
   /* --- Semantic surfaces: prefer these over raw paper tokens --- */
   --surface:       var(--papier-clair);
-  --surface-2:     #faf5ea;
-  --ligne:         rgba(46, 40, 35, 0.10);
-  --ligne-forte:   rgba(46, 40, 35, 0.18);
+  --surface-2:     #fdf5e7;
+  --ligne:         rgba(43, 38, 96, 0.10);
+  --ligne-forte:   rgba(43, 38, 96, 0.18);
 
   /* --- Structure --- */
   --rayon:       20px;
@@ -41,9 +42,9 @@
   --trait-fin:   1px solid var(--ligne);
 
   /* Layered shadows read as depth; a single hard offset reads as a sticker. */
-  --ombre-1: 0 1px 2px rgba(46, 40, 35, 0.06), 0 2px 8px -2px rgba(46, 40, 35, 0.07);
-  --ombre-2: 0 2px 4px rgba(46, 40, 35, 0.05), 0 8px 20px -6px rgba(46, 40, 35, 0.13);
-  --ombre-3: 0 4px 10px rgba(46, 40, 35, 0.07), 0 18px 40px -12px rgba(46, 40, 35, 0.22);
+  --ombre-1: 0 1px 2px rgba(43, 38, 96, 0.06), 0 2px 8px -2px rgba(43, 38, 96, 0.07);
+  --ombre-2: 0 2px 4px rgba(43, 38, 96, 0.05), 0 8px 20px -6px rgba(43, 38, 96, 0.13);
+  --ombre-3: 0 4px 10px rgba(43, 38, 96, 0.07), 0 18px 40px -12px rgba(43, 38, 96, 0.22);
   --ombre: var(--ombre-1);
   --ombre-carte: var(--ombre-2);
 
@@ -52,7 +53,10 @@
   --doux: cubic-bezier(0.32, 0.72, 0, 1);
 
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
-  --sans:  'Avenir Next', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --sans:  'Poppins', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --titre: 'Chewy', 'Arial Rounded MT Bold', var(--sans);
+  --mono:  'Space Mono', ui-monospace, Consolas, monospace;
+
 
   font: 16px/1.6 var(--sans);
   color: var(--encre);
@@ -67,22 +71,16 @@ body {
   margin: 0;
   min-height: 100svh;
   color: var(--encre);
-  /* Grain and halo in pure CSS: nothing to download. */
-  background-color: var(--papier);
-  background-image:
-    radial-gradient(60% 50% at 15% 0%, rgba(255, 255, 255, 0.9), transparent 70%),
-    radial-gradient(50% 40% at 90% 100%, rgba(199, 178, 146, 0.28), transparent 70%),
-    repeating-linear-gradient(52deg, rgba(160, 138, 104, 0.028) 0 2px, transparent 2px 6px);
-  background-attachment: fixed;
+  background: var(--papier-clair);
 }
 
 /* --- Headings -------------------------------------------------------------- */
 h1, h2, h3 {
-  font-family: var(--serif);
+  font-family: var(--titre);
   color: var(--encre);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.12;
-  letter-spacing: -0.015em;
+  letter-spacing: 0.01em;
   margin: 0;
   text-wrap: balance;
 }
@@ -247,8 +245,8 @@ p  { margin: 0; text-wrap: pretty; }
   border-radius: 999px;
   background: linear-gradient(
     100deg,
-    var(--mousse) 0%,
-    var(--lagon) 32%,
+    var(--lagon) 0%,
+    var(--prune) 32%,
     var(--or) 62%,
     var(--terre) 100%
   );
@@ -265,7 +263,7 @@ p  { margin: 0; text-wrap: pretty; }
 .jauge__valeur {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--mousse), #6aa87a);
+  background: linear-gradient(90deg, var(--lagon-fonce), var(--lagon));
   transition: width 0.7s var(--doux);
 }
 
@@ -279,12 +277,12 @@ p  { margin: 0; text-wrap: pretty; }
 .pile   { display: flex; flex-direction: column; gap: 1rem; }
 .rangee { display: flex; align-items: center; gap: 0.75rem; }
 
-a { color: var(--lagon); }
+a { color: var(--lagon-fonce); }
 
 button, input, select { font-family: inherit; }
 
 :focus-visible {
-  outline: 2px solid var(--lagon);
+  outline: 2px solid var(--lagon-fonce);
   outline-offset: 3px;
   border-radius: var(--rayon-xs);
 }
@@ -294,4 +292,10 @@ button, input, select { font-family: inherit; }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.filet {
+  border: 0;
+  border-top: 1.5px dotted var(--encre-pale);
+  margin: 0.6rem 0 1.2rem;
 }

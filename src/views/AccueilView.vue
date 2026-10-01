@@ -64,8 +64,8 @@ const commence = computed(() => progression.nbTampons > 0)
 .livre__tranche {
   flex: none;
   width: 22px;
-  background: linear-gradient(90deg, #cbb495 0%, #ddcbb0 55%, #efe6d6 100%);
-  border-right: 1px solid rgba(46, 40, 35, 0.14);
+  background: linear-gradient(90deg, #e5d2b1 0%, #f2e3c9 55%, #fbf0de 100%);
+  border-right: 1px solid rgba(43, 38, 96, 0.14);
 }
 
 .livre__plat {
