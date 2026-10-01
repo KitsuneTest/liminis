@@ -43,7 +43,7 @@ const courante = computed(() => echelles.value[niveau.value])
     </header>
 
     <div class="bas">
-      <p class="geste">Pincez pour zoomer · glissez pour tourner</p>
+      <p class="geste">Zoomer ou dézoomer et glissez pour tourner autour de l'élément</p>
 
       <div v-if="courante" class="lecture">
         <h2>{{ courante.nom }}</h2>
