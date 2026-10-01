@@ -39,7 +39,12 @@ const routes = [
       },
     ],
   },
-  { path: '/fresque/:id', name: 'fresque-ar', component: () => import('../views/FresqueARView.vue') },
+  {
+    path: '/fresque/:id',
+    name: 'fresque-ar',
+    component: () => import('../views/FresqueARView.vue'),
+    meta: { plein: true },
+  },
   {
     path: '/fresque/:id/microscopique',
     name: 'microscopique',
