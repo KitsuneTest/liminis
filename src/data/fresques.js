@@ -2,10 +2,10 @@
 // Technical fields are read by the store; the rest by the views.
 
 // Campus de Nouville, framed on the three murals rather than on the whole site.
-export const CENTRE_PARCOURS = { lat: -22.26281, lng: 166.40398, zoom: 17 }
+export const CENTRE_PARCOURS = { lat: -22.26264, lng: 166.40493, zoom: 17 }
 
 // Positions derived from the OSM landmarks named in `lieu` (BU, restaurant
-// universitaire, bâtiment S). ⚠️ Still to confirm wall by wall on site.
+// universitaire, amphithéâtre 250). ⚠️ Still to confirm wall by wall on site.
 export const FRESQUES = [
   {
     id: 'hibiscus',
@@ -43,13 +43,13 @@ export const FRESQUES = [
     nom: 'Tortue marine',
     sousTitre: 'Les architectes du récif',
     lieu: 'Près du fablab',
-    indice: 'Sur le mur en contrebas, côté bâtiment S.',
+    indice: "En dessous de l'amphi 250.",
     photo: '/fresques/tortue.jpg',
     cadrage: 'center 78%',
     couleur: 'lagon',
     teinteCible: [185, 235], // lagoon blues
-    lat: -22.26293,
-    lng: 166.40316,
+    lat: -22.26237,
+    lng: 166.40528,
     rayon: 18,
     nbFragments: 3,
     cibleAR: '/ar/tortue/targets.mind',
