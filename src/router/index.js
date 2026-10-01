@@ -49,7 +49,7 @@ const routes = [
     path: '/fresque/:id/microscopique',
     name: 'microscopique',
     component: () => import('../views/MicroscopiqueView.vue'),
-    meta: { verrou: 'microscopique' },
+    meta: { verrou: 'microscopique', plein: true },
   },
 ]
 

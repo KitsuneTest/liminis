@@ -4,11 +4,17 @@ import { useRoute } from 'vue-router'
 import { useProgression } from '../stores/progression'
 import { ECHELLES } from '../data/echelles'
 import VisionEchelles from '../components/VisionEchelles.vue'
+import Icone from '../components/Icone.vue'
 
 const route = useRoute()
 const progression = useProgression()
 const config = computed(() => progression.fresqueConfig(route.params.id))
 const echelles = computed(() => ECHELLES[route.params.id] ?? [])
+const limite = computed(() => progression.niveauxDebloques(route.params.id) - 1)
+const restants = computed(() => echelles.value.length - 1 - limite.value)
+const depart = Math.min(Number(route.query.niveau) || 0, limite.value)
+const depuisCarnet = route.query.depuis === 'carnet'
+const retour = depuisCarnet ? `/carnet/tampons/${route.params.id}` : `/fresque/${route.params.id}`
 
 const vision = ref(null)
 const niveau = ref(0)
@@ -16,114 +22,148 @@ const courante = computed(() => echelles.value[niveau.value])
 </script>
 
 <template>
-  <section class="pile">
-    <header>
-      <p class="surtitre">Étape 3 — au plus près</p>
-      <h1 class="titre-chapitre">Vision d'échelles</h1>
-      <p class="legende sous">{{ config?.nom }} — du visible à la molécule</p>
+  <section class="ecran">
+    <VisionEchelles
+      v-if="config && echelles.length"
+      ref="vision"
+      :fresque="config"
+      :echelles="echelles"
+      :limite="limite"
+      :depart="depart"
+      :decalage="0.12"
+      @niveau="niveau = $event"
+    />
+
+    <header class="haut">
+      <RouterLink class="rond" :to="retour" :aria-label="depuisCarnet ? 'Retour au carnet' : 'Retour à la fresque'">
+        <Icone nom="chevron-gauche" :taille="22" />
+      </RouterLink>
+      <p class="haut__titre">{{ config?.nom }} <span>· du visible à la molécule</span></p>
+      <p class="taille">{{ courante?.taille }}</p>
     </header>
 
-    <div class="hublot">
-      <VisionEchelles
-        v-if="config && echelles.length"
-        ref="vision"
-        :fresque="config"
-        :echelles="echelles"
-        @niveau="niveau = $event"
-      />
-      <div class="hublot__cadre"></div>
-      <p class="hublot__taille">{{ courante?.taille }}</p>
+    <div class="bas">
+      <p class="geste">Zoomer ou dézoomer et glissez pour tourner autour de l'élément</p>
+
+      <div v-if="courante" class="lecture">
+        <h2>{{ courante.nom }}</h2>
+        <p>{{ courante.texte }}</p>
+      </div>
+
+      <div class="crans">
+        <button
+          v-for="(e, i) in echelles"
+          :key="e.nom"
+          class="cran"
+          :class="{ 'cran--actif': i === niveau }"
+          type="button"
+          :disabled="i > limite"
+          :aria-label="i > limite ? 'Échelle encore verrouillée' : e.taille"
+          @click="vision?.aller(i)"
+        >
+          <Icone v-if="i > limite" nom="cadenas" :taille="12" />
+          <template v-else>{{ e.taille }}</template>
+        </button>
+      </div>
+
+      <RouterLink
+        v-if="restants > 0 && !depuisCarnet"
+        class="bouton bouton--accent bouton--bloc"
+        :to="`/fresque/${route.params.id}`"
+      >
+        Chercher le fragment suivant ({{ restants }} {{ restants > 1 ? 'échelles' : 'échelle' }} à révéler)
+      </RouterLink>
     </div>
-
-    <p class="geste">Pincez pour zoomer · glissez pour tourner</p>
-
-    <div v-if="courante" class="feuille lecture">
-      <h2>{{ courante.nom }}</h2>
-      <p class="legende">{{ courante.texte }}</p>
-    </div>
-
-    <div class="crans">
-      <button
-        v-for="(e, i) in echelles"
-        :key="e.nom"
-        class="cran"
-        :class="{ 'cran--actif': i === niveau }"
-        type="button"
-        @click="vision?.aller(i)"
-      >{{ e.taille }}</button>
-    </div>
-
-    <RouterLink class="retour" :to="`/fresque/${route.params.id}`">← Retour à la fresque</RouterLink>
   </section>
 </template>
 
 <style scoped>
-.sous { font-family: var(--serif); font-style: italic; font-size: 1rem; margin-top: 0.2rem; }
-
-.hublot {
+.ecran {
   position: relative;
-  aspect-ratio: 1;
-  margin: 0 auto;
-  width: min(100%, 360px, 52svh);
-  border-radius: 50%;
   overflow: hidden;
-  border: 4px solid var(--encre);
-  box-shadow: var(--ombre-carte);
   background: #17142f;
+  color: var(--papier);
 }
 
-.hublot__cadre {
+.haut,
+.bas {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow: inset 0 0 40px rgba(23, 20, 47, 0.7);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding-inline: 1rem;
+}
+
+.haut {
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
+  padding-bottom: 1.6rem;
+  background: linear-gradient(rgba(23, 20, 47, 0.75), transparent);
   pointer-events: none;
 }
-.hublot__taille {
-  position: absolute;
-  bottom: 9%;
-  left: 50%;
-  transform: translateX(-50%);
+.haut > * { pointer-events: auto; }
+.haut__titre { flex: 1; min-width: 0; margin: 0; font: 600 0.95rem/1.2 var(--serif); }
+.haut__titre span { font-style: italic; font-weight: 400; opacity: 0.75; }
+
+.rond {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(251, 240, 222, 0.16);
+  color: var(--papier);
+}
+
+.taille {
+  flex: none;
+  margin: 0;
   font: 700 0.75rem/1 var(--sans);
   letter-spacing: 0.1em;
   color: var(--encre);
   background: var(--papier-clair);
-  border: 2px solid var(--encre);
   border-radius: 999px;
-  padding: 0.35rem 0.7rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.bas {
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-top: 2.4rem;
+  padding-bottom: 0.9rem;
+  background: linear-gradient(transparent, rgba(23, 20, 47, 0.82) 30%);
   pointer-events: none;
 }
+.bas > * { pointer-events: auto; }
 
-.geste {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--encre-pale);
-}
+.geste { margin: 0; text-align: center; font-size: 0.72rem; opacity: 0.7; pointer-events: none; }
 
-.lecture { text-align: center; }
+.lecture h2 { margin: 0 0 0.25rem; font-size: 1.15rem; color: var(--papier-clair); }
+.lecture p { margin: 0; font-size: 0.82rem; line-height: 1.45; opacity: 0.9; }
 
-.crans { display: flex; justify-content: space-between; gap: 0.3rem; }
+.crans { display: flex; gap: 0.3rem; }
 .cran {
   flex: 1;
+  display: grid;
+  place-items: center;
   font: 700 0.68rem/1 var(--sans);
-  padding: 0.45rem 0.2rem;
+  padding: 0.5rem 0.2rem;
   border-radius: var(--rayon-s);
-  border: 1.5px solid var(--kraft);
-  background: var(--papier-clair);
-  color: var(--encre-pale);
+  border: 1.5px solid rgba(251, 240, 222, 0.35);
+  background: rgba(251, 240, 222, 0.08);
+  color: var(--papier);
   cursor: pointer;
 }
+.cran:disabled { cursor: default; opacity: 0.5; }
 .cran--actif {
-  color: var(--papier-clair);
-  background: var(--encre);
-  border-color: var(--encre);
-}
-
-.retour {
-  align-self: center;
-  font-size: 0.85rem;
-  color: var(--encre-douce);
-  text-decoration: none;
-  border-bottom: 1px dashed var(--kraft);
+  color: var(--encre);
+  background: var(--papier-clair);
+  border-color: var(--papier-clair);
 }
 </style>

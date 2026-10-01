@@ -11,15 +11,16 @@ const progression = useProgression()
     <hr class="filet" />
 
     <ul class="liste">
-      <li v-for="(f, i) in FRESQUES" :key="f.id">
+      <li v-for="f in FRESQUES" :key="f.id">
         <RouterLink
           class="carte"
-          :class="{ 'carte--inverse': i % 2 === 1, 'carte--obtenu': progression.fresques[f.id].tampon }"
+          :class="{ 'carte--obtenu': progression.fresques[f.id].tampon }"
           :style="{ '--teinte': `var(--${f.couleur})` }"
           :to="{ name: 'tampon-detail', params: { id: f.id } }"
         >
           <img
             class="carte__photo"
+            :class="{ 'carte__photo--couleur': progression.fresqueComplete(f.id) }"
             :src="f.photo"
             :style="{ objectPosition: f.cadrage }"
             :alt="`Fresque ${f.nom}`"
@@ -68,7 +69,6 @@ const progression = useProgression()
   transition: transform 0.2s var(--ressort);
 }
 .carte:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--kraft-fonce); }
-.carte--inverse { flex-direction: row-reverse; text-align: right; padding: 0.5rem 0.4rem 0.5rem 0.9rem; }
 
 .carte__photo {
   flex: none;
@@ -96,5 +96,5 @@ const progression = useProgression()
 }
 
 .carte--obtenu { background: var(--teinte); box-shadow: 3px 3px 0 color-mix(in srgb, var(--teinte) 60%, var(--encre)); }
-.carte--obtenu .carte__photo { filter: none; }
+.carte__photo--couleur { filter: none; }
 </style>

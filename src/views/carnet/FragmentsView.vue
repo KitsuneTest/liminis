@@ -64,6 +64,17 @@ const cases = computed(() =>
             </p>
             <h2>{{ ouvert.fresque.nom }}</h2>
             <p class="fiche__sous">{{ ouvert.fresque.sousTitre }}</p>
+            <RouterLink
+              class="bouton bouton--accent bouton--bloc fiche__echelle"
+              :to="{
+                name: 'microscopique',
+                params: { id: ouvert.fresque.id },
+                query: { niveau: ouvert.numero, depuis: 'carnet' },
+              }"
+              @click="ouvert = null"
+            >
+              Voir l'échelle débloquée
+            </RouterLink>
             <button class="fiche__fermer" type="button" @click="ouvert = null">fermer</button>
           </div>
         </div>
@@ -135,6 +146,7 @@ const cases = computed(() =>
   text-transform: uppercase;
 }
 .fiche__sous { font: 400 0.62rem/1.4 var(--mono); color: var(--encre-pale); text-transform: uppercase; }
+.fiche__echelle { margin-top: 0.8rem; }
 .fiche__fermer {
   align-self: center;
   margin-top: 0.8rem;

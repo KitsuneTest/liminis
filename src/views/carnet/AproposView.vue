@@ -1,3 +1,17 @@
+<script setup>
+import { useRouter } from 'vue-router'
+import { useProgression } from '../../stores/progression'
+
+const progression = useProgression()
+const router = useRouter()
+
+async function reinitialiser() {
+  if (!confirm('Effacer tous les tampons, fragments et le familier de cet appareil ?')) return
+  await progression.reinitialiser()
+  router.push({ name: 'tampons' })
+}
+</script>
+
 <template>
   <section class="pile">
     <header>
@@ -25,6 +39,16 @@
         reste sur votre appareil et le parcours fonctionne hors-ligne une fois la
         page chargée.
       </p>
+    </div>
+
+    <div class="feuille">
+      <p class="surtitre">Recommencer</p>
+      <p class="legende">
+        Efface la progression de cet appareil : tampons, fragments, échelles et familier.
+      </p>
+      <button class="bouton bouton--secondaire bouton--bloc" type="button" @click="reinitialiser">
+        Réinitialiser le parcours
+      </button>
     </div>
   </section>
 </template>

@@ -76,25 +76,45 @@ function indole(m, cy) {
   m.lier(C2, C3, 2)
   m.lier(C3, h[1])
   m.greffer(N, 'H', -60, 0.6)
+  m.greffer(C2, 'R', 0)
   return h
+}
+
+// Pyrrole hanging from atom i, as the last unit painted on the mural: C3 on i, COOH on C2, R on C5.
+function pyrrole(m, i) {
+  const ancre = m.atomes[i]
+  const c3 = { x: ancre.x + Math.cos(-30 * DEG), y: ancre.y + Math.sin(-30 * DEG) }
+  const c2 = { x: c3.x, y: c3.y - 1 }
+  const [n, c5, c4] = polygoneSurArete(c3, c2, 5)
+  const C3 = m.ajouter('C', c3.x, c3.y)
+  const C2 = m.ajouter('C', c2.x, c2.y)
+  const N = m.ajouter('N', n.x, n.y)
+  const C5 = m.ajouter('C', c5.x, c5.y)
+  const C4 = m.ajouter('C', c4.x, c4.y)
+  m.lier(i, C3)
+  m.cycle([C3, C2, N, C5, C4], [2, 1, 1, 2, 1])
+  m.greffer(N, 'H', -60, 0.6)
+  m.greffer(C5, 'R', 0)
+  const carboxyle = m.greffer(C2, 'C', -150)
+  m.greffer(carboxyle, 'O', 150, 1, 2)
+  m.hydroxyle(carboxyle, -90)
 }
 
 function eumelanine() {
   const m = constructeur()
   const u1 = indole(m, 0)
   const u2 = indole(m, -3)
-  const u3 = indole(m, -6)
   m.lier(u1[3], u2[0])
-  m.lier(u2[3], u3[0])
 
   m.greffer(u1[4], 'O', -150, 1, 2)
   m.greffer(u1[5], 'O', 150, 1, 2)
   m.hydroxyle(u2[4], -150, -55)
   m.hydroxyle(u2[5], 150)
-  m.hydroxyle(u3[5], 150)
-  const carboxyle = m.greffer(u3[4], 'C', -150)
-  m.greffer(carboxyle, 'O', -90, 1, 2)
-  m.hydroxyle(carboxyle, 180)
+
+  // As painted: the third unit is a ring-opened pyrrole, joined through a ketone bridge.
+  const pont = m.greffer(u2[3], 'C', -90)
+  m.greffer(pont, 'O', -150, 1, 2)
+  pyrrole(m, pont)
   return m
 }
 

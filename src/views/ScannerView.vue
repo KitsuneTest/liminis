@@ -8,7 +8,11 @@ const router = useRouter()
 const progression = useProgression()
 const { demarrer, position, statut } = useGeoloc()
 
-onMounted(() => demarrer())
+onMounted(() => {
+  demarrer()
+  // The AR engine weighs several MB: fetch it while the visitor picks a mural.
+  import('mind-ar/dist/mindar-image-three.prod.js').catch(() => {})
+})
 
 const parDistance = computed(() => {
   if (!position.value) return FRESQUES.map((f) => ({ f, d: null }))
@@ -39,7 +43,7 @@ function formater(m) {
     <div v-if="proche" class="feuille proposition" :style="{ '--teinte': `var(--${proche.couleur})` }">
       <img
         class="proposition__photo"
-        :class="{ 'photo--bloquee': !progression.fresques[proche.id].tampon }"
+        :class="{ 'photo--bloquee': !progression.fresqueComplete(proche.id) }"
         :src="proche.photo"
         :style="{ objectPosition: proche.cadrage }"
         :alt="`Fresque ${proche.nom}`"
@@ -72,7 +76,7 @@ function formater(m) {
         >
           <img
             class="ligne__photo"
-            :class="{ 'photo--bloquee': !progression.fresques[f.id].tampon }"
+            :class="{ 'photo--bloquee': !progression.fresqueComplete(f.id) }"
             :src="f.photo" :style="{ objectPosition: f.cadrage }" alt="" />
           <span class="ligne__texte">
             <span class="ligne__nom">{{ f.nom }}</span>

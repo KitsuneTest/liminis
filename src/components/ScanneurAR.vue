@@ -15,6 +15,7 @@ const etat = ref('preparation') // preparation | demande | actif | refuse | indi
 const detailErreur = ref('')
 const avancement = ref(0)
 const reconnue = ref(false)
+const consigne = ref(null)
 
 let promesseCible = null
 let cible = null
@@ -23,7 +24,22 @@ let ar = null
 let horloge = null
 let rayon = null
 let tentative = 0
+let ancre = null
+let matriceInverse = null
+let pointCamera = null
 const fragments = new Map()
+
+// Yaw, in degrees, beyond which the visitor counts as standing to one side of the mural.
+const ANGLE_FACE = 12
+const ANGLE_COTE = 15
+
+const CONSIGNES = {
+  viser: { texte: 'Visez la fresque en entier' },
+  face: { texte: 'Placez-vous bien en face de la fresque', fleche: '↑' },
+  gauche: { texte: 'Décalez-vous sur la gauche de la fresque', fleche: '←' },
+  droite: { texte: 'Décalez-vous sur la droite de la fresque', fleche: '→' },
+  toucher: { texte: 'Un fragment est apparu : touchez-le' },
+}
 
 
 const MESSAGES = {
@@ -71,27 +87,64 @@ function erreurCamera(err) {
   else etat.value = 'indisponible'
 }
 
-function poserFragments(ancre) {
+function poserFragments() {
   const teinte = getComputedStyle(document.documentElement)
     .getPropertyValue(`--${props.fresque.couleur}`)
     .trim()
-  props.fresque.ancrages.slice(0, props.fresque.nbFragments).forEach(({ u, v }, i) => {
+  props.fresque.ancrages.slice(0, props.fresque.nbFragments).forEach(({ u, v, vue }, i) => {
     const id = `frag-${i + 1}`
     if (props.collectes.includes(id)) return
     const fragment = creerFragment(teinte, i * 1.7)
     fragment.position.set(u - 0.5, (0.5 - v) * cible.ratio, 0)
-    fragment.userData.id = id
-    fragment.userData.taille = 0.022
-    fragment.scale.setScalar(0.022)
+    Object.assign(fragment.userData, { id, vue: vue ?? 'face', taille: 0.022, revele: false, apparition: 0 })
+    fragment.scale.setScalar(1e-4)
     ancre.group.add(fragment)
     fragments.set(id, fragment)
   })
 }
 
+// Fragments are revealed one at a time, in order, each from its own vantage point.
+function prochainFragment() {
+  for (const fragment of fragments.values()) {
+    if (fragment.userData.collecte === null) return fragment
+  }
+  return null
+}
+
+function vueCourante() {
+  matriceInverse.copy(ancre.group.matrix).invert()
+  const camera = pointCamera.set(0, 0, 0).applyMatrix4(matriceInverse)
+  const lacet = THREE.MathUtils.radToDeg(Math.atan2(camera.x, camera.z))
+  if (Math.abs(lacet) < ANGLE_FACE) return 'face'
+  if (lacet <= -ANGLE_COTE) return 'gauche'
+  if (lacet >= ANGLE_COTE) return 'droite'
+  return null
+}
+
+function majConsigne() {
+  const prochain = prochainFragment()
+  let cle = null
+  if (prochain && !reconnue.value) cle = 'viser'
+  else if (prochain) {
+    if (!prochain.userData.revele && vueCourante() === prochain.userData.vue)
+      prochain.userData.revele = true
+    cle = prochain.userData.revele ? 'toucher' : prochain.userData.vue
+  }
+  if (consigne.value?.cle !== cle) consigne.value = cle ? { cle, ...CONSIGNES[cle] } : null
+}
+
 function rendu() {
   const dt = horloge.getDelta()
   const temps = horloge.elapsedTime
+  majConsigne()
   for (const [id, fragment] of fragments) {
+    const donnees = fragment.userData
+    if (donnees.collecte === null) {
+      donnees.apparition = Math.min(1, donnees.apparition + (donnees.revele ? dt * 2.5 : 0))
+      const a = donnees.apparition
+      // Slight overshoot so the crystal pops out of the wall.
+      fragment.scale.setScalar(donnees.taille * Math.max(1e-4, a * (1 + 0.35 * Math.sin(a * Math.PI))))
+    }
     if (!animerFragment(fragment, temps, dt)) continue
     fragment.removeFromParent()
     libererObjet(fragment)
@@ -110,7 +163,7 @@ function toucher(e) {
   )
   rayon.setFromCamera(ndc, ar.camera)
   const zones = [...fragments.values()]
-    .filter((f) => f.userData.collecte === null)
+    .filter((f) => f.userData.collecte === null && f.userData.revele)
     .map((f) => f.userData.zone)
   const [touche] = rayon.intersectObjects(zones, false)
   if (touche) touche.object.parent.userData.collecte = horloge.elapsedTime
@@ -173,10 +226,10 @@ async function demarrerCamera() {
     soleil.position.set(0.5, 1, 2)
     instance.scene.add(soleil)
 
-    const ancre = instance.addAnchor(0)
+    ancre = instance.addAnchor(0)
     ancre.onTargetFound = () => (reconnue.value = true)
     ancre.onTargetLost = () => (reconnue.value = false)
-    poserFragments(ancre)
+    poserFragments()
 
     await instance.start()
     if (n !== tentative) {
@@ -186,6 +239,8 @@ async function demarrerCamera() {
     ar = instance
     horloge = new THREE.Clock()
     rayon = new THREE.Raycaster()
+    matriceInverse = new THREE.Matrix4()
+    pointCamera = new THREE.Vector3()
     ar.renderer.setAnimationLoop(rendu)
     etat.value = 'actif'
   } catch (err) {
@@ -208,6 +263,8 @@ function nettoyer() {
   tentative++
   if (ar) fermer(ar)
   ar = null
+  ancre = null
+  consigne.value = null
   fragments.forEach(libererObjet)
   fragments.clear()
   scene.value?.replaceChildren()
@@ -235,6 +292,13 @@ onBeforeUnmount(() => {
 <template>
   <div class="viseur">
     <div ref="scene" class="viseur__scene" @pointerdown="toucher"></div>
+
+    <Transition name="consigne">
+      <p v-if="etat === 'actif' && consigne" :key="consigne.cle" class="consigne">
+        <span v-if="consigne.fleche" class="consigne__fleche">{{ consigne.fleche }}</span>
+        {{ consigne.texte }}
+      </p>
+    </Transition>
 
     <div v-if="etat === 'preparation' || etat === 'demande'" class="voile">
       <span class="voile__icone voile__icone--tourne">◌</span>
@@ -264,7 +328,35 @@ onBeforeUnmount(() => {
   inset: 0;
   overflow: hidden;
   touch-action: manipulation;
+  /* MindAR puts its video at z-index -2: without this stacking context it falls behind .viseur's background. */
+  isolation: isolate;
 }
+
+.consigne {
+  position: absolute;
+  left: 50%;
+  bottom: calc(1.4rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(23, 20, 47, 0.72);
+  color: var(--papier);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+.consigne__fleche { font-size: 1.2rem; line-height: 1; animation: pousse 1.2s ease-in-out infinite; }
+@keyframes pousse { 50% { transform: scale(1.25); } }
+
+.consigne-enter-active,
+.consigne-leave-active { transition: opacity 0.25s ease; }
+.consigne-enter-from,
+.consigne-leave-to { opacity: 0; }
 
 .voile {
   position: absolute;
