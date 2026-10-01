@@ -80,9 +80,13 @@ export const useProgression = defineStore('progression', {
       return this.nbTampons >= FRESQUES.length
     },
 
-    // The companion page needs all 3 stamps
+    tousFragmentsCollectes() {
+      return FRESQUES.every((f) => this.fresqueComplete(f.id))
+    },
+
+    // The companion page needs all 3 stamps and every fragment
     pageFamilierDisponible() {
-      return this.tousTamponsCollectes
+      return this.tousTamponsCollectes && this.tousFragmentsCollectes
     },
 
     familierDebloque: (state) => state.familier !== null,
@@ -180,9 +184,9 @@ export const useProgression = defineStore('progression', {
       this.quiz.termine = true
     },
 
-    // Unlocks the companion (needs all 3 stamps and a finished quiz)
+    // Unlocks the companion (needs all stamps, all fragments and a finished quiz)
     debloquerFamilier(familier) {
-      if (this.tousTamponsCollectes && this.quiz.termine) {
+      if (this.pageFamilierDisponible && this.quiz.termine) {
         this.familier = familier // e.g. { id: 'renard', nom: 'Renard curieux' }
         return true
       }
