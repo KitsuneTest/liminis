@@ -137,7 +137,7 @@ function formater(m) {
   object-fit: cover;
 }
 .ligne__texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.ligne__nom { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
+.ligne__nom { font-family: var(--sans); font-size: 1rem; font-weight: 600; }
 .ligne__lieu { font-size: 0.72rem; color: var(--encre-pale); }
 
 .ligne__meta { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }

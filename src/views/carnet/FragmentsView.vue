@@ -119,7 +119,7 @@ const cases = computed(() =>
   display: grid;
   place-items: center;
   padding: 2rem 1.6rem;
-  background: rgba(43, 38, 96, 0.45);
+  background: color-mix(in srgb, var(--encre) 45%, transparent);
 }
 
 .fiche {

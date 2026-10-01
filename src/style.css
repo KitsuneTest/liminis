@@ -2,37 +2,36 @@
    Offline-safe: fonts are bundled through @fontsource, never fetched remotely. */
 
 :root {
-  /* --- Paper & ink --- */
+  /* --- Palette du brandboard (copiée dans src/lib/palette.js pour la 3D) --- */
+  --encre:         #2b2560;
+  --prune:         #6a4aa8;
+  --terre:         #c74f20;
+  --lagon:         #3dbdb5;
+  --or:            #f5cf45;
+
+  /* --- Papier --- */
   --papier:        #fbf0de;
   --papier-clair:  #fff8ec;
   --papier-ombre:  #f2e3c9;
   --kraft:         #e5d2b1;
   --kraft-fonce:   #b39470;
 
-  --encre:         #2b2660;
-  --encre-douce:   #5e5a82;
-  --encre-pale:    #918caa;
+  /* --- Teintes dérivées : mélanges de la palette, jamais de nouvelle couleur.
+     Les foncées gardent un contraste ≥ 4.5:1 sur le papier. --- */
+  --encre-douce:   color-mix(in srgb, var(--encre) 75%, var(--papier));
+  --encre-pale:    color-mix(in srgb, var(--encre) 50%, var(--papier));
+  --lagon-clair:   color-mix(in srgb, var(--lagon) 20%, var(--papier-clair));
+  --lagon-fonce:   color-mix(in srgb, var(--lagon) 60%, black);
+  --terre-clair:   color-mix(in srgb, var(--terre) 18%, var(--papier-clair));
+  --terre-fonce:   color-mix(in srgb, var(--terre) 85%, black);
+  --nuit:          color-mix(in srgb, var(--encre) 55%, black);
 
-  /* --- Accents: project palette --- */
-  --mousse:        #2e9c95;
-  --mousse-clair:  #d6f1ee;
-  --lagon:         #3dbdb5;
-  --lagon-clair:   #d9f3f1;
-  --lagon-fonce:   #1e7b76;
-  --terre:         #c74f20;
-  --terre-clair:   #f8dccb;
-  --prune:         #6a4aa8;
-  --prune-clair:   #e7dff5;
-  --or:            #f5cf45;
-
-  --rouge-tampon:  #b4441a;
-  --vert-valide:   #1e7b76;
-
-  /* --- Semantic surfaces: prefer these over raw paper tokens --- */
+  /* --- Surfaces sémantiques --- */
   --surface:       var(--papier-clair);
-  --surface-2:     #fdf5e7;
-  --ligne:         rgba(43, 38, 96, 0.10);
-  --ligne-forte:   rgba(43, 38, 96, 0.18);
+  --surface-2:     color-mix(in srgb, var(--papier) 50%, var(--papier-clair));
+  --ligne:         color-mix(in srgb, var(--encre) 10%, transparent);
+  --ligne-forte:   color-mix(in srgb, var(--encre) 18%, transparent);
+  --vert-valide:   var(--lagon-fonce);
 
   /* --- Structure --- */
   --rayon:       20px;
@@ -41,20 +40,22 @@
   --trait:       1px solid var(--ligne);
   --trait-fin:   1px solid var(--ligne);
 
-  /* Layered shadows read as depth; a single hard offset reads as a sticker. */
-  --ombre-1: 0 1px 2px rgba(43, 38, 96, 0.06), 0 2px 8px -2px rgba(43, 38, 96, 0.07);
-  --ombre-2: 0 2px 4px rgba(43, 38, 96, 0.05), 0 8px 20px -6px rgba(43, 38, 96, 0.13);
-  --ombre-3: 0 4px 10px rgba(43, 38, 96, 0.07), 0 18px 40px -12px rgba(43, 38, 96, 0.22);
+  /* Ombres portées, pour donner de la profondeur. Une seule ombre nette fait "autocollant". */
+  --ombre-1: 0 1px 2px color-mix(in srgb, var(--encre) 6%, transparent),
+             0 2px 8px -2px color-mix(in srgb, var(--encre) 7%, transparent);
+  --ombre-2: 0 2px 4px color-mix(in srgb, var(--encre) 5%, transparent),
+             0 8px 20px -6px color-mix(in srgb, var(--encre) 13%, transparent);
+  --ombre-3: 0 4px 10px color-mix(in srgb, var(--encre) 7%, transparent),
+             0 18px 40px -12px color-mix(in srgb, var(--encre) 22%, transparent);
   --ombre: var(--ombre-1);
   --ombre-carte: var(--ombre-2);
 
-  /* One easing for everything that moves. */
+  /* Courbe d'animation */
   --ressort: cubic-bezier(0.34, 1.3, 0.5, 1);
   --doux: cubic-bezier(0.32, 0.72, 0, 1);
 
-  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
-  --sans:  'Poppins', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
-  --titre: 'Chewy', 'Arial Rounded MT Bold', var(--sans);
+  --sans:  'Karla', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --titre: 'Darumadrop One','Arial Rounded MT Bold', var(--sans);
   --mono:  'Space Mono', ui-monospace, Consolas, monospace;
 
 
@@ -74,7 +75,7 @@ body {
   background: var(--papier-clair);
 }
 
-/* --- Headings -------------------------------------------------------------- */
+/* --- Titres -------------------------------------------------------------- */
 h1, h2, h3 {
   font-family: var(--titre);
   color: var(--encre);
@@ -89,7 +90,7 @@ h2 { font-size: 1.3rem; }
 h3 { font-size: 1.05rem; }
 p  { margin: 0; text-wrap: pretty; }
 
-/* Chapter heading: a title followed by a hairline rule */
+/* Titre de chapitre */
 .titre-chapitre {
   display: flex;
   align-items: center;
@@ -113,7 +114,7 @@ p  { margin: 0; text-wrap: pretty; }
 
 .legende { font-size: 0.875rem; line-height: 1.55; color: var(--encre-douce); }
 
-/* --- Sheet: the base container --------------------------------------------- */
+/* --- Feuilles du carnet --------------------------------------------- */
 .feuille {
   position: relative;
   background: var(--surface);
@@ -123,7 +124,7 @@ p  { margin: 0; text-wrap: pretty; }
   padding: 1.25rem;
 }
 
-/* "Stitched" variant: a dashed rule set in from the edge. */
+/* Feuille cousue */
 .feuille--cousue::before {
   content: '';
   position: absolute;
@@ -135,7 +136,7 @@ p  { margin: 0; text-wrap: pretty; }
 
 .feuille--teintee { background: var(--surface-2); }
 
-/* --- Buttons --------------------------------------------------------------- */
+/* --- Boutons --------------------------------------------------------------- */
 .bouton {
   display: inline-flex;
   align-items: center;
@@ -185,59 +186,12 @@ p  { margin: 0; text-wrap: pretty; }
   border: 1px solid transparent;
   white-space: nowrap;
 }
-/* "8 m", not "8 M". */
+/* "8 m", pas "8 M". */
 .puce--mesure { text-transform: none; letter-spacing: 0; font-size: 0.76rem; font-weight: 600; }
 
-.puce--ok      { color: var(--vert-valide);  background: var(--mousse-clair); }
+.puce--ok      { color: var(--vert-valide);  background: var(--lagon-clair); }
 .puce--attente { color: var(--encre-douce);  background: var(--papier-ombre); }
-.puce--alerte  { color: var(--rouge-tampon); background: var(--terre-clair); }
-
-/* --- Stamp: the central motif of the notebook ------------------------------ */
-.tampon {
-  --teinte: var(--rouge-tampon);
-  --taille: 72px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--taille);
-  height: var(--taille);
-  /* The caption must wrap inside the disc, not spill out. */
-  padding: 0 10px;
-  flex: none;
-  border-radius: 50%;
-  border: 2px solid var(--teinte);
-  color: var(--teinte);
-  font-family: var(--serif);
-  text-align: center;
-  line-height: 1.05;
-  transform: rotate(-7deg);
-  transition: transform 0.4s var(--ressort);
-}
-.tampon::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border-radius: 50%;
-  border: 1px dashed currentColor;
-  opacity: 0.55;
-}
-.tampon__num { font-size: 1.45rem; font-weight: 700; }
-.tampon__txt {
-  font-size: 0.46rem;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-}
-
-/* Empty slot: the hollow left to fill */
-.tampon--vide {
-  border-style: dashed;
-  border-color: var(--kraft);
-  color: var(--encre-pale);
-  transform: none;
-}
-.tampon--vide::before { display: none; }
+.puce--alerte  { color: var(--terre-fonce); background: var(--terre-clair); }
 
 /* --- Washi tape ------------------------------------------------------------ */
 .bandeau-washi {
@@ -253,7 +207,7 @@ p  { margin: 0; text-wrap: pretty; }
   opacity: 0.9;
 }
 
-/* --- Progress bar ---------------------------------------------------------- */
+/* --- Barre de progrès ---------------------------------------------------------- */
 .jauge {
   height: 8px;
   border-radius: 999px;
@@ -267,7 +221,7 @@ p  { margin: 0; text-wrap: pretty; }
   transition: width 0.7s var(--doux);
 }
 
-/* --- Odds and ends --------------------------------------------------------- */
+/* --- Séparateur --------------------------------------------------------- */
 .separateur {
   border: 0;
   border-top: 1px dashed var(--kraft);

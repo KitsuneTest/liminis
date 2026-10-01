@@ -180,14 +180,14 @@ watch(
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(43, 38, 96, 0.35) 30%, rgba(43, 38, 96, 0) 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--encre) 35%, transparent) 30%, transparent 70%);
 }
 .moi span {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: var(--encre);
-  box-shadow: 0 0 0 3px rgba(43, 38, 96, 0.25);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--encre) 25%, transparent);
 }
 
 .leaflet-container { font-family: var(--sans); background: var(--papier); }

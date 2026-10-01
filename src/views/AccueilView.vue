@@ -64,8 +64,8 @@ const commence = computed(() => progression.nbTampons > 0)
 .livre__tranche {
   flex: none;
   width: 22px;
-  background: linear-gradient(90deg, #e5d2b1 0%, #f2e3c9 55%, #fbf0de 100%);
-  border-right: 1px solid rgba(43, 38, 96, 0.14);
+  background: linear-gradient(90deg, var(--kraft) 0%, var(--papier-ombre) 55%, var(--papier) 100%);
+  border-right: 1px solid color-mix(in srgb, var(--encre) 14%, transparent);
 }
 
 .livre__plat {
@@ -119,7 +119,7 @@ const commence = computed(() => progression.nbTampons > 0)
 }
 
 .accroche {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 0.95rem;
   line-height: 1.75;
   color: var(--encre-douce);

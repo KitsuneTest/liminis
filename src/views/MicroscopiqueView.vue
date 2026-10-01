@@ -81,7 +81,7 @@ const courante = computed(() => echelles.value[niveau.value])
 .ecran {
   position: relative;
   overflow: hidden;
-  background: #17142f;
+  background: var(--nuit);
   color: var(--papier);
 }
 
@@ -101,11 +101,11 @@ const courante = computed(() => echelles.value[niveau.value])
   gap: 0.6rem;
   padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
   padding-bottom: 1.6rem;
-  background: linear-gradient(rgba(23, 20, 47, 0.75), transparent);
+  background: linear-gradient(color-mix(in srgb, var(--nuit) 75%, transparent), transparent);
   pointer-events: none;
 }
 .haut > * { pointer-events: auto; }
-.haut__titre { flex: 1; min-width: 0; margin: 0; font: 600 0.95rem/1.2 var(--serif); }
+.haut__titre { flex: 1; min-width: 0; margin: 0; font: 600 0.95rem/1.2 var(--sans); }
 .haut__titre span { font-style: italic; font-weight: 400; opacity: 0.75; }
 
 .rond {
@@ -115,7 +115,7 @@ const courante = computed(() => echelles.value[niveau.value])
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(251, 240, 222, 0.16);
+  background: color-mix(in srgb, var(--papier) 16%, transparent);
   color: var(--papier);
 }
 
@@ -137,7 +137,7 @@ const courante = computed(() => echelles.value[niveau.value])
   gap: 0.7rem;
   padding-top: 2.4rem;
   padding-bottom: 0.9rem;
-  background: linear-gradient(transparent, rgba(23, 20, 47, 0.82) 30%);
+  background: linear-gradient(transparent, color-mix(in srgb, var(--nuit) 82%, transparent) 30%);
   pointer-events: none;
 }
 .bas > * { pointer-events: auto; }
@@ -155,8 +155,8 @@ const courante = computed(() => echelles.value[niveau.value])
   font: 700 0.68rem/1 var(--sans);
   padding: 0.5rem 0.2rem;
   border-radius: var(--rayon-s);
-  border: 1.5px solid rgba(251, 240, 222, 0.35);
-  background: rgba(251, 240, 222, 0.08);
+  border: 1.5px solid color-mix(in srgb, var(--papier) 35%, transparent);
+  background: color-mix(in srgb, var(--papier) 8%, transparent);
   color: var(--papier);
   cursor: pointer;
 }

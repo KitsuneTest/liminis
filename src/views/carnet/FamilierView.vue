@@ -168,7 +168,7 @@ function recommencer() {
   inset: 8px;
   border-radius: 52% 48% 46% 54% / 58% 56% 44% 42%;
   background: var(--teinte);
-  box-shadow: inset -10px -14px 26px rgba(0, 0, 0, 0.18);
+  box-shadow: inset -10px -14px 26px color-mix(in srgb, var(--encre) 25%, transparent);
 }
 .creature__glyphe {
   position: relative;
@@ -181,7 +181,7 @@ function recommencer() {
   width: 78px;
   height: 12px;
   border-radius: 50%;
-  background: rgba(59, 47, 36, 0.18);
+  background: color-mix(in srgb, var(--encre) 18%, transparent);
   filter: blur(2px);
 }
 @keyframes flotte {
