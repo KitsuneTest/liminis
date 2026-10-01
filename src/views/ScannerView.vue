@@ -39,6 +39,7 @@ function formater(m) {
     <div v-if="proche" class="feuille proposition" :style="{ '--teinte': `var(--${proche.couleur})` }">
       <img
         class="proposition__photo"
+        :class="{ 'photo--bloquee': !progression.fresques[proche.id].tampon }"
         :src="proche.photo"
         :style="{ objectPosition: proche.cadrage }"
         :alt="`Fresque ${proche.nom}`"
@@ -69,7 +70,10 @@ function formater(m) {
           type="button"
           @click="router.push(`/fresque/${f.id}`)"
         >
-          <img class="ligne__photo" :src="f.photo" :style="{ objectPosition: f.cadrage }" alt="" />
+          <img
+            class="ligne__photo"
+            :class="{ 'photo--bloquee': !progression.fresques[f.id].tampon }"
+            :src="f.photo" :style="{ objectPosition: f.cadrage }" alt="" />
           <span class="ligne__texte">
             <span class="ligne__nom">{{ f.nom }}</span>
             <span class="ligne__lieu">{{ f.lieu }}</span>
@@ -134,4 +138,6 @@ function formater(m) {
 
 .ligne__meta { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .ligne__compte { font-size: 0.7rem; color: var(--encre-douce); font-weight: 650; }
+
+.photo--bloquee { filter: grayscale(1); }
 </style>

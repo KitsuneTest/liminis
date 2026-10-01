@@ -1,15 +1,21 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useProgression, FRESQUES, distanceMetres } from '../stores/progression'
+import { useProgression, FRESQUES } from '../stores/progression'
 import { useGeoloc } from '../composables/useGeoloc'
+import { distanceA, libelleDistance, libelleEtat } from '../lib/statutFresque'
 import CarteParcours from '../components/CarteParcours.vue'
+import Icone from '../components/Icone.vue'
 
 const router = useRouter()
 const progression = useProgression()
-const { demarrer, position, erreur, precision, statut } = useGeoloc()
+const { demarrer, position, erreur } = useGeoloc()
 
 const annonce = ref('')
+const choixManuel = ref(null)
+const ouvert = ref(false)
+const musique = ref(false)
+let audio = null
 
 onMounted(() => {
   demarrer((fresqueId) => {
@@ -19,103 +25,277 @@ onMounted(() => {
   })
 })
 
-// Beyond 2 km the automatic stamp will never land: either not on site yet, or
-// the placeholder coordinates in src/data/fresques.js are still in place.
-const horsZone = computed(() => {
-  if (!position.value) return false
-  const d = FRESQUES.map((f) => distanceMetres(position.value, { lat: f.lat, lng: f.lng }))
-  return Math.min(...d) > 2000
+onBeforeUnmount(() => audio?.pause())
+
+const segments = computed(() => {
+  const remplis = FRESQUES.flatMap((f) =>
+    progression.fresques[f.id].fragments.map(() => `var(--${f.couleur})`)
+  )
+  const total = FRESQUES.reduce((n, f) => n + f.nbFragments, 0)
+  return [...remplis, ...Array(total - remplis.length).fill(null)]
 })
 
-const statutTexte = computed(() => {
-  if (erreur.value) return erreur.value
-  if (statut.value === 'recherche') return 'Recherche du signal GPS…'
-  if (horsZone.value) return 'Vous êtes loin du campus de Nouville'
-  if (precision.value) return `Position suivie — précision ~${precision.value} m`
-  return null
+const choisie = computed(() => {
+  if (choixManuel.value) return FRESQUES.find((f) => f.id === choixManuel.value)
+  if (!position.value) return FRESQUES[0]
+  return [...FRESQUES].sort((a, b) => distanceA(a, position.value) - distanceA(b, position.value))[0]
 })
+
+const etat = computed(() => progression.fresques[choisie.value.id])
+const complete = computed(() => progression.fresqueComplete(choisie.value.id))
+const statutLigne = computed(
+  () => `${libelleDistance(choisie.value, position.value)} · ${libelleEtat(choisie.value, etat.value)}`
+)
+
+function choisir(id) {
+  choixManuel.value = id
+  ouvert.value = true
+}
+
+function basculerMusique() {
+  audio ??= Object.assign(new Audio('/son/ambiance.mp3'), { loop: true, volume: 0.5 })
+  if (musique.value) {
+    audio.pause()
+    musique.value = false
+    return
+  }
+  audio.play().then(() => (musique.value = true)).catch(() => (musique.value = false))
+}
 </script>
 
 <template>
   <div class="explorer">
-    <CarteParcours
-      class="explorer__carte"
-      plein
-      :fresques="FRESQUES"
-      :etats="progression.fresques"
-      :position="position"
-      @choisir="(id) => router.push({ name: 'tampon-detail', params: { id } })"
-    />
+    <div class="explorer__carte">
+      <CarteParcours
+        :fresques="FRESQUES"
+        :etats="progression.fresques"
+        :position="position"
+        :selection="choisie.id"
+        @choisir="choisir"
+      />
 
-    <div class="flottants">
-      <p class="pastille pastille--compte">
-        <b>{{ progression.nbTampons }}</b><span>/{{ FRESQUES.length }}</span>
-      </p>
+      <div class="haut">
+        <div class="recolte" :aria-label="`${segments.filter(Boolean).length} fragments récoltés`">
+          <Icone class="recolte__etoile" nom="etoile" :taille="30" />
+          <span class="recolte__barre">
+            <i
+              v-for="(c, i) in segments"
+              :key="i"
+              :class="{ plein: c }"
+              :style="c ? { background: c } : null"
+            ></i>
+          </span>
+        </div>
+
+        <button
+          class="rond"
+          type="button"
+          :aria-pressed="musique"
+          :aria-label="musique ? 'Couper la musique' : 'Lancer la musique'"
+          @click="basculerMusique"
+        >
+          <Icone :nom="musique ? 'musique' : 'musique-coupee'" :taille="18" />
+        </button>
+      </div>
 
       <Transition name="surgir">
-        <p v-if="annonce" class="pastille pastille--ok" role="status">✓ {{ annonce }}</p>
-        <p
-          v-else-if="statutTexte"
-          class="pastille"
-          :class="{ 'pastille--alerte': erreur }"
-          role="status"
-        >
-          {{ statutTexte }}
-        </p>
+        <p v-if="annonce" class="toast toast--ok" role="status">✓ {{ annonce }}</p>
+        <p v-else-if="erreur" class="toast" role="status">{{ erreur }}</p>
       </Transition>
     </div>
+
+    <section class="feuillet" :class="{ 'feuillet--ouvert': ouvert }">
+      <button class="feuillet__tete" type="button" :aria-expanded="ouvert" @click="ouvert = !ouvert">
+        <img
+          class="feuillet__vignette"
+          :src="choisie.photo"
+          :style="{ objectPosition: choisie.cadrage }"
+          alt=""
+        />
+        <span class="feuillet__texte">
+          <span class="feuillet__nom">{{ choisie.nomCourt }}</span>
+          <span class="feuillet__statut">{{ statutLigne }}</span>
+        </span>
+        <Icone :nom="ouvert ? 'chevron-bas' : 'chevron-haut'" :taille="20" />
+      </button>
+
+      <div v-if="ouvert" class="feuillet__corps">
+        <RouterLink
+          v-if="!complete"
+          class="loupe"
+          :to="`/fresque/${choisie.id}`"
+        >
+          <Icone nom="loupe" :taille="18" />
+          observer à la loupe
+        </RouterLink>
+        <span v-else class="loupe loupe--inactive" aria-disabled="true">
+          <Icone nom="loupe" :taille="18" />
+          observer à la loupe
+        </span>
+        <p class="feuillet__compte">
+          {{ etat.fragments.length }} fragments sur {{ choisie.nbFragments }} récolté ici
+        </p>
+      </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
 .explorer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--papier-clair);
+}
+
+.explorer__carte {
   position: relative;
+  flex: 1;
   display: flex;
   min-height: 0;
 }
-.explorer__carte { flex: 1; min-height: 0; }
+.explorer__carte > :first-child { flex: 1; }
 
-.flottants {
+.haut {
   position: absolute;
-  top: calc(12px + env(safe-area-inset-top, 0px));
-  left: 12px;
-  right: 92px;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  left: 18px;
+  right: 14px;
   z-index: 600;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   pointer-events: none;
 }
+.haut > * { pointer-events: auto; }
 
-.pastille {
-  max-width: 100%;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
+.recolte {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 200px;
+}
+.recolte__etoile {
+  position: relative;
+  z-index: 1;
   color: var(--encre);
-  background: color-mix(in srgb, var(--papier-clair) 92%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--ligne-forte);
-  box-shadow: var(--ombre-2);
+  margin-right: -10px;
+}
+.recolte__barre {
+  flex: 1;
+  display: flex;
+  height: 14px;
+  border-radius: 0 999px 999px 0;
+  overflow: hidden;
+  background: var(--kraft);
+}
+.recolte__barre i {
+  flex: 1;
+  border-right: 1.5px solid var(--papier);
+  background: var(--kraft);
+}
+.recolte__barre i:last-child { border-right: 0; }
+
+.rond {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--encre);
+  background: color-mix(in srgb, var(--papier-clair) 70%, transparent);
+  color: var(--encre);
+  cursor: pointer;
 }
 
-.pastille--compte { font-family: var(--serif); padding: 0.3rem 0.8rem; }
-.pastille--compte b { font-size: 1.15rem; }
-.pastille--compte span { font-size: 0.8rem; color: var(--encre-douce); }
-
-.pastille--ok {
-  font-weight: 700;
-  color: var(--vert-valide);
-  background: color-mix(in srgb, var(--mousse-clair) 94%, transparent);
-  border-color: var(--vert-valide);
+.toast {
+  position: absolute;
+  top: calc(56px + env(safe-area-inset-top, 0px));
+  left: 18px;
+  right: 18px;
+  z-index: 600;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--rayon-xs);
+  font: 400 0.7rem/1.4 var(--mono);
+  color: var(--encre);
+  background: var(--papier-clair);
+  border: 1px solid var(--kraft);
 }
-.pastille--alerte {
-  color: var(--rouge-tampon);
-  background: color-mix(in srgb, var(--terre-clair) 94%, transparent);
-  border-color: var(--rouge-tampon);
-  border-radius: var(--rayon-s);
+.toast--ok { color: var(--vert-valide); border-color: var(--vert-valide); }
+
+.feuillet {
+  position: relative;
+  z-index: 700;
+  padding: 1rem 1.4rem 0.9rem;
+  background: var(--papier-clair);
+}
+
+.feuillet__tete {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--encre);
+  text-align: left;
+  cursor: pointer;
+}
+
+.feuillet__vignette {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--kraft);
+}
+
+.feuillet__texte { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.feuillet__nom {
+  font: 700 0.72rem/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.feuillet__statut {
+  font: 400 0.6rem/1.2 var(--mono);
+  color: var(--encre);
+  text-transform: capitalize;
+}
+.feuillet--ouvert .feuillet__statut {
+  color: var(--encre-pale);
+  text-transform: none;
+}
+
+.feuillet__corps {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
+}
+
+.loupe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 46px;
+  border-radius: 999px;
+  font: 600 0.84rem/1 var(--sans);
+  text-decoration: none;
+  color: var(--papier-clair);
+  background: var(--encre);
+}
+.loupe--inactive { background: var(--kraft); color: var(--papier-clair); }
+
+.feuillet__compte {
+  text-align: center;
+  font: 400 0.6rem/1 var(--mono);
+  color: var(--encre-pale);
 }
 
 .surgir-enter-active,

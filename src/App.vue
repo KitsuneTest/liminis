@@ -1,15 +1,16 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import Icone from './components/Icone.vue'
 
 const route = useRoute()
 const barreVisible = computed(() => route.name !== 'accueil')
 const plein = computed(() => route.name === 'accueil' || route.meta.plein === true)
 
 const ONGLETS = [
-  { to: '/parcours', libelle: 'Explorer', glyphe: '◈' },
-  { to: '/carnet', libelle: 'Carnet', glyphe: '❑' },
-  { to: '/scanner', libelle: 'Scanner', glyphe: '◎' },
+  { to: '/parcours', libelle: 'Explorer', icone: 'boussole' },
+  { to: '/carnet', libelle: 'Carnet', icone: 'carnet' },
+  { to: '/scanner', libelle: 'Scanner', icone: 'camera', aussi: ['fresque-ar'] },
 ]
 </script>
 
@@ -24,12 +25,18 @@ const ONGLETS = [
     </main>
 
     <nav v-if="barreVisible" class="barre-nav" aria-label="Navigation principale">
-      <RouterLink v-for="o in ONGLETS" :key="o.to" :to="o.to" class="onglet">
-        <span class="onglet__pastille">
-          <span class="onglet__glyphe" aria-hidden="true">{{ o.glyphe }}</span>
-        </span>
-        <span class="onglet__libelle">{{ o.libelle }}</span>
-      </RouterLink>
+      <div class="pilule">
+        <RouterLink
+          v-for="o in ONGLETS"
+          :key="o.to"
+          :to="o.to"
+          class="onglet"
+          :class="{ 'router-link-active': o.aussi?.includes(route.name) }"
+          :aria-label="o.libelle"
+        >
+          <Icone :nom="o.icone" :taille="26" />
+        </RouterLink>
+      </div>
     </nav>
   </div>
 </template>
@@ -46,7 +53,9 @@ const ONGLETS = [
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem 1.5rem;
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem 1rem;
+  display: flex;
+  flex-direction: column;
 }
 .app__contenu--plein {
   padding: 0;
@@ -61,53 +70,33 @@ const ONGLETS = [
   position: sticky;
   bottom: 0;
   z-index: 800;
-  display: flex;
-  justify-content: space-around;
-  gap: 0.25rem;
-  padding: 0.5rem 0.9rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  background: color-mix(in srgb, var(--papier-clair) 80%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
-  border-top: 1px solid var(--ligne);
+  padding: 0.6rem 0.9rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  background: var(--papier-clair);
 }
-@supports not (backdrop-filter: blur(1px)) {
-  .barre-nav { background: var(--papier-clair); }
+
+.pilule {
+  max-width: 420px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 1.6rem;
+  border-radius: 999px;
+  border: 2px solid var(--kraft);
+  background: var(--papier-clair);
 }
 
 .onglet {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0.2rem;
-  text-decoration: none;
-  color: var(--encre-pale);
-  transition: color 0.25s var(--doux);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.onglet__pastille {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  transition: background 0.25s var(--doux), border-color 0.25s var(--doux),
-    transform 0.25s var(--ressort);
+  width: 44px;
+  height: 36px;
+  color: var(--encre-pale);
+  transition: color 0.2s var(--doux), transform 0.2s var(--ressort);
+  -webkit-tap-highlight-color: transparent;
 }
-.onglet__glyphe { font-size: 1.05rem; line-height: 1; }
-.onglet__libelle { font-size: 0.64rem; font-weight: 650; }
-
-.onglet:active .onglet__pastille { transform: scale(0.9); }
-
+.onglet:active { transform: scale(0.9); }
 .onglet.router-link-active { color: var(--encre); }
-.onglet.router-link-active .onglet__pastille {
-  background: var(--surface);
-  border-color: var(--ligne-forte);
-  box-shadow: var(--ombre-1);
-}
 
 .page-enter-active,
 .page-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
