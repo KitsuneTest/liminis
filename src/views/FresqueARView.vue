@@ -14,9 +14,8 @@ const etat = computed(() => progression.fresques[id] ?? { tampon: false, fragmen
 
 function collecter(fragmentId) {
   progression.collecterFragment(id, fragmentId)
-  if (progression.fresqueComplete(id)) {
-    setTimeout(() => router.push({ name: 'microscopique', params: { id } }), 1200)
-  }
+  const niveau = progression.niveauxDebloques(id) - 1
+  setTimeout(() => router.push({ name: 'microscopique', params: { id }, query: { niveau } }), 1200)
 }
 </script>
 

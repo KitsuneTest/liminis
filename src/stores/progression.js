@@ -66,10 +66,11 @@ export const useProgression = defineStore('progression', {
       return (state.fresques[id]?.fragments.length ?? 0) >= cfg.nbFragments
     },
 
-    // The microscopic page unlocks once every fragment is collected
-    microscopiqueDebloquee() {
-      return (id) => this.fresqueComplete(id)
-    },
+    // Each fragment opens one more scale: the photo, then one level per fragment
+    niveauxDebloques: (state) => (id) => 1 + (state.fresques[id]?.fragments.length ?? 0),
+
+    // The microscopic page opens with the first fragment
+    microscopiqueDebloquee: (state) => (id) => (state.fresques[id]?.fragments.length ?? 0) > 0,
 
     // How many stamps have been earned
     nbTampons: (state) =>

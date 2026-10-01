@@ -1,16 +1,27 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { construireNiveau, libererNiveau } from '../lib/echelles3d'
 
 const props = defineProps({
   fresque: { type: Object, required: true },
   echelles: { type: Array, required: true },
+  // Deepest level the visitor has unlocked so far.
+  limite: { type: Number, default: Infinity },
+  // Level to dive into on opening, starting from the one above it.
+  depart: { type: Number, default: 0 },
+  // Fraction of the height the scene is lifted by, to clear an overlay at the bottom.
+  decalage: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['niveau'])
 
 const FACTEUR = 7
+const DISTANCE = 5.5
+const OUVERTURE = 40
+// Width of the scene seen along the screen's shorter side, whatever its shape.
+const CHAMP = 2 * DISTANCE * Math.tan(THREE.MathUtils.degToRad(OUVERTURE / 2))
+const champ = new THREE.Vector2(CHAMP, CHAMP)
 
 const conteneur = ref(null)
 
@@ -37,9 +48,13 @@ const lisser = (a, b, x) => {
   return t * t * (3 - 2 * t)
 }
 
+const plafond = () => Math.min(niveaux.length - 1, props.limite)
+
 function aller(i) {
-  zoom = borner(i, 0, niveaux.length - 1)
+  zoom = borner(i, 0, plafond())
 }
+
+watch(() => props.limite, () => (zoom = borner(zoom, 0, plafond())))
 
 function ecart() {
   const [a, b] = [...pointeurs.values()]
@@ -61,7 +76,7 @@ function surDeplacement(e) {
   if (!pointeurs.has(e.pointerId)) return
   pointeurs.set(e.pointerId, { x: e.clientX, y: e.clientY })
   if (pincement && pointeurs.size >= 2) {
-    zoom = borner(pincement.zoom + Math.log2(ecart() / pincement.ecart) * 1.3, 0, niveaux.length - 1)
+    zoom = borner(pincement.zoom + Math.log2(ecart() / pincement.ecart) * 1.3, 0, plafond())
   } else if (glisse) {
     rotY = glisse.rotY + (e.clientX - glisse.x) * 0.008
     rotX = borner(glisse.rotX + (e.clientY - glisse.y) * 0.006, -0.9, 0.9)
@@ -81,7 +96,7 @@ function surRelache(e) {
 
 function surMolette(e) {
   e.preventDefault()
-  zoom = borner(zoom - e.deltaY * 0.0025, 0, niveaux.length - 1)
+  zoom = borner(zoom - e.deltaY * 0.0025, 0, plafond())
 }
 
 function rendu() {
@@ -102,10 +117,16 @@ function rendu() {
     const opacite = (i === 0 ? 1 : lisser(-1, -0.45, t)) * (i === dernier ? 1 : 1 - lisser(0.35, 0.95, t))
     if (opacite < 0.01) return
 
-    n.pivot.scale.setScalar(FACTEUR ** t)
-    if (n.contenu.userData.foyer) {
+    const echelle = FACTEUR ** t
+    n.pivot.scale.setScalar(echelle)
+    const { foyer, depart, bornes } = n.contenu.userData
+    if (foyer) {
       const k = lisser(0, 0.7, t)
-      n.contenu.position.set(-n.contenu.userData.foyer.x * k, -n.contenu.userData.foyer.y * k, 0)
+      const centre = new THREE.Vector2().lerpVectors(depart, foyer, k)
+      // Keep the frame inside the photo so the dark background never shows.
+      const demiX = Math.max(0, bornes.x - champ.x / 2 / echelle)
+      const demiY = Math.max(0, bornes.y - champ.y / 2 / echelle)
+      n.contenu.position.set(-borner(centre.x, -demiX, demiX), -borner(centre.y, -demiY, demiY), 0)
     }
     if (n.type !== 'photo') {
       n.pivot.rotation.set(
@@ -127,7 +148,10 @@ function redimensionner() {
   if (!l || !h) return
   renderer.setSize(l, h, false)
   camera.aspect = l / h
-  camera.updateProjectionMatrix()
+  champ.set(CHAMP * Math.max(1, camera.aspect), CHAMP / Math.min(1, camera.aspect))
+  camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(champ.y / 2 / DISTANCE))
+  camera.setViewOffset(l, h, 0, h * props.decalage, l, h)
+  niveaux.forEach((n) => n.contenu.userData.cadrer?.(champ))
 }
 
 onMounted(() => {
@@ -137,10 +161,12 @@ onMounted(() => {
   renderer.autoClear = false
   conteneur.value.appendChild(renderer.domElement)
 
-  camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100)
-  camera.position.z = 5.5
+  camera = new THREE.PerspectiveCamera(OUVERTURE, 1, 0.1, 100)
+  camera.position.z = DISTANCE
 
   niveaux = props.echelles.map((e) => construireNiveau(e, props.fresque))
+  zoom = borner(props.depart, 0, plafond())
+  zoomAffiche = Math.max(0, zoom - 1)
 
   redimensionner()
   observateur = new ResizeObserver(redimensionner)

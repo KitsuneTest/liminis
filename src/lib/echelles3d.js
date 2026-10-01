@@ -29,19 +29,50 @@ function grilleHexagonale(pas, rayon) {
   return points
 }
 
+// A tiny, blurred copy of the mural fills the screen around it instead of a dark void.
+function textureFloue(image, { x, y, w, h }) {
+  const canvas = Object.assign(document.createElement('canvas'), { width: 64, height: 64 })
+  const ctx = canvas.getContext('2d')
+  ctx.filter = 'blur(3px) brightness(0.55)'
+  const [sx, sy, sw, sh] = [image.width * x, image.height * y, image.width * w, image.height * h]
+  ctx.drawImage(image, sx, sy, sw, sh, -8, -8, 80, 80)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  return texture
+}
+
 function photo(niveau, fresque) {
   const groupe = new THREE.Group()
   const { x, y, w, h } = fresque.cible
-  const largeur = 2.9
   const plan = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true }))
-  const placer = (ratio) => {
-    plan.scale.set(largeur, largeur * ratio, 1)
-    groupe.userData.foyer = new THREE.Vector2(
-      (fresque.foyer.u - 0.5) * largeur,
-      (0.5 - fresque.foyer.v) * largeur * ratio
-    )
+  const fond = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({ color: 0x17142f, transparent: true, depthWrite: false })
+  )
+  fond.position.z = -0.01
+  const depart = fresque.depart ?? { u: 0.5, v: 0.5 }
+  let ratio = (h * 0.75) / w
+  let champ = new THREE.Vector2(4, 4)
+
+  const placer = () => {
+    // The whole mural fits the screen, slightly cropped; the blurred copy covers what is left.
+    const largeur = Math.min(champ.x, champ.y / ratio) * 1.04
+    const hauteur = largeur * ratio
+    const cote = Math.max(champ.x, champ.y) * 1.6
+    const point = ({ u, v }) => new THREE.Vector2((u - 0.5) * largeur, (0.5 - v) * hauteur)
+    plan.scale.set(largeur, hauteur, 1)
+    fond.scale.set(cote, cote, 1)
+    Object.assign(groupe.userData, {
+      depart: point(depart),
+      foyer: point(fresque.foyer),
+      bornes: new THREE.Vector2(largeur / 2, hauteur / 2),
+    })
   }
-  placer((h * 0.75) / w)
+  groupe.userData.cadrer = (c) => {
+    champ = c.clone()
+    placer()
+  }
+  placer()
 
   new THREE.TextureLoader().load(fresque.photo, (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace
@@ -49,17 +80,21 @@ function photo(niveau, fresque) {
     texture.offset.set(x, 1 - y - h)
     plan.material.map = texture
     plan.material.needsUpdate = true
-    placer((texture.image.height * h) / (texture.image.width * w))
+    fond.material.map = textureFloue(texture.image, fresque.cible)
+    fond.material.color.set(0xffffff)
+    fond.material.needsUpdate = true
+    ratio = (texture.image.height * h) / (texture.image.width * w)
+    placer()
   })
 
-  groupe.add(plan)
+  groupe.add(fond, plan)
   return groupe
 }
 
 function domes(niveau) {
   const groupe = new THREE.Group()
   const hasard = aleatoire(7)
-  const points = grilleHexagonale(0.36, 1.7)
+  const points = grilleHexagonale(0.36, 6)
 
   const geometrie = new THREE.SphereGeometry(0.17, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2)
   geometrie.rotateX(Math.PI / 2)
@@ -77,7 +112,7 @@ function domes(niveau) {
     instances.setColorAt(i, teinte.set(niveau.couleur).offsetHSL(0, 0, (hasard() - 0.5) * 0.12))
   })
 
-  const fond = new THREE.Mesh(new THREE.CircleGeometry(1.85, 48), materiau(niveau.fond))
+  const fond = new THREE.Mesh(new THREE.CircleGeometry(12, 64), materiau(niveau.fond))
   fond.position.z = -0.01
   groupe.add(fond, instances)
   groupe.userData.inclinaison = -0.6
@@ -95,7 +130,7 @@ function cellules(niveau) {
 
   const membrane = materiau(niveau.membrane, { opacity: 0.28, depthWrite: false, roughness: 0.2 })
   const interieur = materiau(niveau.interieur, { opacity: 0.8 })
-  const noyau = materiau(niveau.noyau, { roughness: 0.3 })
+  const noyau = niveau.noyau ? materiau(niveau.noyau, { roughness: 0.3 }) : null
   const sphere = new THREE.SphereGeometry(1, 32, 20)
 
   centres.forEach((c) => {
@@ -105,10 +140,13 @@ function cellules(niveau) {
     const vacuole = new THREE.Mesh(sphere, interieur)
     vacuole.scale.set(0.4, 0.4 * aplati, 0.38)
     vacuole.position.x = 0.05
-    const coeur = new THREE.Mesh(sphere, noyau)
-    coeur.scale.setScalar(0.11)
-    coeur.position.set(-0.28, 0.12 * aplati, 0.18)
-    cellule.add(vacuole, coeur, enveloppe)
+    cellule.add(vacuole, enveloppe)
+    if (noyau) {
+      const coeur = new THREE.Mesh(sphere, noyau)
+      coeur.scale.setScalar(0.11)
+      coeur.position.set(-0.28, 0.12 * aplati, 0.18)
+      cellule.add(coeur)
+    }
     cellule.position.set(c.x, c.y, (hasard() - 0.5) * 0.3)
     cellule.rotation.z = hasard() * Math.PI
     groupe.add(cellule)
@@ -180,24 +218,82 @@ function grains(niveau) {
   return groupe
 }
 
-function plaques(niveau) {
+function ellipse(rx, ry, n = 72) {
+  return Array.from({ length: n }, (_, k) => {
+    const t = (k / n) * Math.PI * 2
+    return new THREE.Vector2(Math.cos(t) * rx, Math.sin(t) * ry)
+  })
+}
+
+// Keeps the part of a convex polygon closer to a than to b.
+function couperVoronoi(polygone, a, b) {
+  const milieu = a.clone().add(b).multiplyScalar(0.5)
+  const normale = b.clone().sub(a)
+  const cote = (p) => p.clone().sub(milieu).dot(normale)
+  const resultat = []
+  polygone.forEach((p, i) => {
+    const q = polygone[(i + 1) % polygone.length]
+    const dp = cote(p)
+    const dq = cote(q)
+    if (dp <= 0) resultat.push(p)
+    if (dp * dq < 0) resultat.push(p.clone().lerp(q, dp / (dp - dq)))
+  })
+  return resultat
+}
+
+function ecaille(polygone, materiau, bombe) {
+  const centre = polygone.reduce((c, p) => c.add(p), new THREE.Vector2()).divideScalar(polygone.length)
+  const contour = polygone.map((p) => {
+    const d = p.distanceTo(centre)
+    return centre.clone().lerp(p, Math.max(0, 1 - 0.05 / d))
+  })
+  const geometrie = new THREE.ExtrudeGeometry(new THREE.Shape(contour), {
+    depth: 0.08,
+    bevelEnabled: true,
+    bevelThickness: 0.05,
+    bevelSize: 0.04,
+    bevelSegments: 2,
+  })
+  const mesh = new THREE.Mesh(geometrie, materiau)
+  mesh.position.z = bombe(centre)
+  return mesh
+}
+
+// Green turtle carapace: 5 vertebral scutes, 4 costal pairs, and a ring of 12
+// marginal pairs plus the nuchal scute.
+function carapace(niveau) {
   const groupe = new THREE.Group()
   const hasard = aleatoire(5)
-  const points = grilleHexagonale(0.62, 1.75)
-  const geometrie = new THREE.CylinderGeometry(0.31, 0.33, 0.12, 6)
-  geometrie.rotateX(Math.PI / 2)
-  geometrie.rotateZ(Math.PI / 6)
-  const instances = new THREE.InstancedMesh(geometrie, materiau('#ffffff', { roughness: 0.45, flatShading: true }), points.length)
-  const m = new THREE.Matrix4()
-  const teinte = new THREE.Color()
-  points.forEach((p, i) => {
-    m.compose(new THREE.Vector3(p.x, p.y, hasard() * 0.04), new THREE.Quaternion(), new THREE.Vector3(1, 1, 0.7 + hasard() * 0.6))
-    instances.setMatrixAt(i, m)
-    instances.setColorAt(i, teinte.set(niveau.couleurs[Math.floor(hasard() * niveau.couleurs.length)]))
+  const materiaux = niveau.couleurs.map((c) => materiau(c, { roughness: 0.45 }))
+  const teinte = () => materiaux[Math.floor(hasard() * materiaux.length)]
+  const [rx, ry] = [2.6, 3.5]
+  const [ix, iy] = [2.1, 2.85]
+  const bombe = (p) => 0.45 * Math.max(0, 1 - (p.x / rx) ** 2 - (p.y / ry) ** 2)
+
+  const germes = [
+    ...[2.1, 1.05, 0, -1.05, -2.1].map((y) => new THREE.Vector2(0, y)),
+    ...[1.55, 0.5, -0.55, -1.7].flatMap((y) => [new THREE.Vector2(-1.35, y), new THREE.Vector2(1.35, y)]),
+  ]
+  const interieur = ellipse(ix, iy)
+  germes.forEach((g) => {
+    const cellule = germes.reduce((poly, autre) => (autre === g ? poly : couperVoronoi(poly, g, autre)), interieur)
+    groupe.add(ecaille(cellule, teinte(), bombe))
   })
-  const fond = new THREE.Mesh(new THREE.CircleGeometry(1.9, 48), materiau('#3b2a1c'))
-  fond.position.z = -0.07
-  groupe.add(fond, instances)
+
+  const nombre = 25
+  for (let k = 0; k < nombre; k++) {
+    const t0 = Math.PI / 2 + ((k - 0.5) / nombre) * Math.PI * 2
+    const arc = Array.from({ length: 5 }, (_, j) => t0 + ((j / 4) * Math.PI * 2) / nombre)
+    const bord = [
+      ...arc.map((t) => new THREE.Vector2(Math.cos(t) * rx, Math.sin(t) * ry)),
+      ...arc.reverse().map((t) => new THREE.Vector2(Math.cos(t) * ix, Math.sin(t) * iy)),
+    ]
+    groupe.add(ecaille(bord, teinte(), bombe))
+  }
+
+  const fond = new THREE.Mesh(new THREE.CircleGeometry(12, 64), materiau('#2c2416'))
+  fond.position.z = -0.1
+  groupe.add(fond)
   groupe.userData.inclinaison = -0.45
   return groupe
 }
@@ -266,7 +362,7 @@ function moleculeEnBoules(niveau) {
   return groupe
 }
 
-const GENERATEURS = { photo, domes, cellules, plume, grains, plaques, molecule: moleculeEnBoules }
+const GENERATEURS = { photo, domes, cellules, plume, grains, carapace, molecule: moleculeEnBoules }
 
 export function construireNiveau(niveau, fresque) {
   const scene = new THREE.Scene()
