@@ -53,6 +53,14 @@ const fragments = computed(() =>
         </span>
       </li>
     </ul>
+
+    <RouterLink
+      v-if="progression.microscopiqueDebloquee(config.id)"
+      class="bouton bouton--accent bouton--bloc echelles"
+      :to="{ name: 'microscopique', params: { id: config.id }, query: { depuis: 'carnet' } }"
+    >
+      Revoir les échelles du vivant
+    </RouterLink>
   </section>
 
   <section v-else>
@@ -122,6 +130,8 @@ const fragments = computed(() =>
   border-radius: 50%;
   background: var(--teinte);
 }
+.echelles { margin-top: 1.8rem; }
+
 .jeton--vide {
   background: transparent;
   border: 1.5px dotted var(--encre-pale);

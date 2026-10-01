@@ -216,7 +216,7 @@ export const useProgression = defineStore('progression', {
     // Wipes everything (handy when several people test on one device)
     async reinitialiser() {
       await localforage.removeItem(CLE_STOCKAGE)
-      this.$patch(etatInitial())
+      this.$patch({ ...etatInitial(), hydrate: true })
     },
   },
 })
